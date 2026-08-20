@@ -345,18 +345,47 @@ svg { display: block; width: 20px; height: 20px; }
 .form-hint { display: flex; align-items: center; gap: 6px; margin-top: 11px; color: #98a19f; font-size: 9px; }
 .form-hint svg { width: 14px; height: 14px; color: #9db5ae; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 25px; }
-.message-modal { width: min(100%, 590px); padding: 27px 32px 29px; }
-.message-detail-top { display: flex; align-items: center; gap: 11px; margin-bottom: 19px; }
+.message-modal {
+  width: min(100%, 760px);
+  max-height: min(92vh, 880px);
+  padding: 0;
+  overflow: hidden;
+}
+.message-reader { display: flex; flex-direction: column; max-height: min(92vh, 880px); }
+.reader-top { position: relative; flex: 0 0 auto; padding: 24px 32px 16px; border-bottom: 1px solid var(--line); }
+.reader-close { top: 12px; right: 12px; }
+.message-detail-top { display: flex; align-items: center; gap: 11px; margin: 0 28px 14px 0; }
 .detail-avatar { width: 39px; height: 39px; }
 .message-detail-top > div { display: flex; flex: 1; flex-direction: column; gap: 3px; }
 .message-detail-top .modal-eyebrow { margin: 0; }
 .detail-date { color: #98a2a2; font-family: 'DM Mono', monospace; font-size: 8px; }
 .detail-star { width: 31px; height: 31px; }
 .detail-star svg { width: 17px; height: 17px; }
-.message-modal h2 { max-width: 500px; font-size: 22px; line-height: 1.22; }
-.detail-sender { margin-top: 10px; color: #7d898b; font-size: 10px; }
-.detail-body { margin: 23px 0 25px; padding: 19px 0 4px; color: #617074; border-top: 1px solid var(--line); font-size: 11px; line-height: 1.75; white-space: pre-line; }
+.message-modal h2 { max-width: 640px; margin: 0; font-size: 22px; line-height: 1.22; }
+.detail-sender { margin-top: 8px; color: #7d898b; font-size: 11px; word-break: break-word; }
+.detail-scroll {
+  flex: 1 1 auto;
+  min-height: 180px;
+  overflow-y: auto;
+  padding: 18px 28px 12px;
+  background: #fbfcfb;
+}
+.detail-body { color: #44555a; font-size: 13px; line-height: 1.7; }
+.email-frame {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  border: 0;
+  background: #fff;
+  border-radius: 10px;
+}
 .detail-actions { display: flex; justify-content: flex-end; gap: 9px; }
+.reader-actions {
+  flex: 0 0 auto;
+  padding: 14px 24px 18px;
+  border-top: 1px solid var(--line);
+  background: #fff;
+}
 .detail-actions .button svg { width: 14px; height: 14px; }
 
 /* Toast */
@@ -444,7 +473,8 @@ svg { display: block; width: 20px; height: 20px; }
   .privacy-list { padding-right: 16px; padding-left: 16px; }
   .modal { padding: 26px 22px 23px; }
   .modal-trust { flex-direction: column; gap: 8px; }
-  .message-modal { padding-right: 22px; padding-left: 22px; }
+  .message-modal { width: min(100%, 760px); }
+  .reader-top, .detail-scroll, .reader-actions { padding-right: 18px; padding-left: 18px; }
 }
 
 @media (max-width: 460px) {

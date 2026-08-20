@@ -380,23 +380,30 @@
       </section>
 
       <section class="modal message-modal" id="messageModal" role="dialog" aria-modal="true" aria-labelledby="messageModalTitle">
-        <button class="modal-close" data-close-modal aria-label="Close dialog" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-        <div class="message-detail-top">
-          <span class="detail-avatar" id="detailAvatar">IR</span>
-          <div>
-            <p class="modal-eyebrow" id="detailCategory">IRCC</p>
-            <span class="detail-date" id="detailDate"></span>
+        <div class="message-reader">
+          <header class="reader-top">
+            <button class="modal-close reader-close" data-close-modal aria-label="Close dialog" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+            <div class="message-detail-top">
+              <span class="detail-avatar" id="detailAvatar">IR</span>
+              <div>
+                <p class="modal-eyebrow" id="detailCategory">IRCC</p>
+                <span class="detail-date" id="detailDate"></span>
+              </div>
+              <button class="star-button detail-star" id="detailStar" aria-label="Star message" type="button">
+                <svg viewBox="0 0 24 24" fill="none"><path d="m12 4.25 2.36 4.78 5.28.77-3.82 3.72.9 5.26L12 16.3l-4.72 2.48.9-5.26-3.82-3.72 5.28-.77L12 4.25Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+            <h2 id="messageModalTitle"></h2>
+            <div class="detail-sender" id="detailSender"></div>
+          </header>
+          <div class="detail-scroll" id="detailScroll">
+            <div class="detail-body hidden" id="detailBody"></div>
+            <iframe class="email-frame" id="emailFrame" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin" title="Message content"></iframe>
           </div>
-          <button class="star-button detail-star" id="detailStar" aria-label="Star message" type="button">
-            <svg viewBox="0 0 24 24" fill="none"><path d="m12 4.25 2.36 4.78 5.28.77-3.82 3.72.9 5.26L12 16.3l-4.72 2.48.9-5.26-3.82-3.72 5.28-.77L12 4.25Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
-          </button>
-        </div>
-        <h2 id="messageModalTitle"></h2>
-        <div class="detail-sender" id="detailSender"></div>
-        <div class="detail-body" id="detailBody"></div>
-        <div class="detail-actions">
-          <button class="button button-primary" id="openOriginalButton" type="button"><span>Open original</span> <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-          <button class="button button-secondary" id="detailReadButton" type="button">Mark as read</button>
+          <div class="detail-actions reader-actions">
+            <button class="button button-primary" id="openOriginalButton" type="button"><span>Open original</span> <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="button button-secondary" id="detailReadButton" type="button">Mark as read</button>
+          </div>
         </div>
       </section>
     </div>

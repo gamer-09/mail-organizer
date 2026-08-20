@@ -165,12 +165,171 @@ function collectGmailParts(part, bucket = []) {
 
 function extractGmailBody(payload) {
   const parts = collectGmailParts(payload);
-  const plain = parts.find((part) => part.mime === 'text/plain');
   const html = parts.find((part) => part.mime === 'text/html');
-  if (plain) return decodeBase64Url(plain.data);
+  const plain = parts.find((part) => part.mime === 'text/plain');
   if (html) return htmlToText(decodeBase64Url(html.data));
+  if (plain) return decodeBase64Url(plain.data);
   if (payload?.body?.data) return decodeBase64Url(payload.body.data);
   return '';
+}
+
+function extractGmailHtml(payload) {
+  const parts = collectGmailParts(payload);
+  const html = parts.find((part) => part.mime === 'text/html');
+  const plain = parts.find((part) => part.mime === 'text/plain');
+  if (html) return unwrapEmailHtml(decodeBase64Url(html.data));
+  if (plain) return textToHtml(decodeBase64Url(plain.data));
+  if (payload?.body?.data) {
+    const decoded = decodeBase64Url(payload.body.data);
+    return /<[a-z][\s\S]*>/i.test(decoded) ? unwrapEmailHtml(decoded) : textToHtml(decoded);
+  }
+  return '';
+}
+
+function unwrapEmailHtml(html = '') {
+  const withoutDoc = String(html)
+    .replace(/<!doctype[^>]*>/gi, '')
+    .replace(/<meta[^>]*>/gi, '');
+  const body = withoutDoc.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+  return (body ? body[1] : withoutDoc).trim();
+}
+
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[character]));
+}
+
+function textToHtml(text = '') {
+  const blocks = escapeHtml(text).split(/\n{2,}/).filter(Boolean);
+  if (!blocks.length) return '<p></p>';
+  return blocks.map((block) => `<p>${block.replace(/\n/g, '<br>')}</p>`).join('');
+}
+
+function collectImageParts(part, bucket = []) {
+  if (!part) return bucket;
+  const mime = part.mimeType || '';
+  const cidHeader = gmailHeader(part.headers || [], 'Content-ID') || gmailHeader(part.headers || [], 'Content-Id');
+  const cid = String(cidHeader || '').replace(/[<>]/g, '').trim();
+  if (mime.startsWith('image/') && (part.body?.attachmentId || part.body?.data)) {
+    bucket.push({
+      cid,
+      mime,
+      attachmentId: part.body.attachmentId,
+      data: part.body.data
+    });
+  }
+  (part.parts || []).forEach((child) => collectImageParts(child, bucket));
+  return bucket;
+}
+
+function replaceCidImages(html, map) {
+  return String(html)
+    .replace(/src\s*=\s*(['"])cid:([^'"]+)\1/gi, (full, quote, cid) => {
+      const key = String(cid).replace(/[<>]/g, '').toLowerCase();
+      return map[key] ? `src=${quote}${map[key]}${quote}` : full;
+    })
+    .replace(/url\(\s*['"]?cid:([^'")\s]+)['"]?\s*\)/gi, (full, cid) => {
+      const key = String(cid).replace(/[<>]/g, '').toLowerCase();
+      return map[key] ? `url("${map[key]}")` : full;
+    });
+}
+
+function sanitizeEmailHtml(html = '') {
+  const template = document.createElement('template');
+  template.innerHTML = unwrapEmailHtml(html);
+  const banned = new Set(['SCRIPT', 'IFRAME', 'OBJECT', 'EMBED', 'LINK', 'META', 'BASE', 'FORM', 'INPUT', 'BUTTON', 'TEXTAREA', 'SELECT', 'SVG', 'VIDEO', 'AUDIO', 'SOURCE']);
+  const walk = (node) => {
+    [...node.childNodes].forEach((child) => {
+      if (child.nodeType !== 1) return;
+      if (banned.has(child.tagName) || child.tagName === 'STYLE') {
+        child.remove();
+        return;
+      }
+      [...child.attributes].forEach((attr) => {
+        const name = attr.name.toLowerCase();
+        const value = String(attr.value || '').trim();
+        if (name.startsWith('on') || name === 'srcdoc' || name.startsWith('xlink')) {
+          child.removeAttribute(attr.name);
+          return;
+        }
+        if ((name === 'href' || name === 'src' || name === 'background' || name === 'action')
+          && /^(javascript|vbscript|data:text\/html)/i.test(value)) {
+          child.removeAttribute(attr.name);
+        }
+      });
+      if (child.tagName === 'A') {
+        child.setAttribute('target', '_blank');
+        child.setAttribute('rel', 'noopener noreferrer');
+      }
+      walk(child);
+    });
+  };
+  walk(template.content);
+  return template.innerHTML;
+}
+
+async function inlineGmailImages(token, messageId, payload, html) {
+  const parts = collectImageParts(payload);
+  const map = {};
+  await Promise.all(parts.map(async (part) => {
+    let data = part.data;
+    if (!data && part.attachmentId) {
+      try {
+        const attachment = await gmailApi(token, `messages/${messageId}/attachments/${part.attachmentId}`);
+        data = attachment.data;
+      } catch {
+        return;
+      }
+    }
+    if (!data || !part.cid) return;
+    const normalized = data.replace(/-/g, '+').replace(/_/g, '/');
+    map[part.cid.toLowerCase()] = `data:${part.mime};base64,${normalized}`;
+  }));
+  return replaceCidImages(html, map);
+}
+
+async function inlineOutlookImages(token, messageId, html) {
+  let attachments;
+  try {
+    attachments = await graphFetch(token, `me/messages/${encodeURIComponent(messageId)}/attachments`);
+  } catch {
+    return html;
+  }
+  const map = {};
+  for (const attachment of attachments.value || []) {
+    if (!attachment.contentBytes) continue;
+    const mime = attachment.contentType || 'application/octet-stream';
+    if (!String(mime).startsWith('image/') && !attachment.contentId) continue;
+    const dataUrl = `data:${mime};base64,${attachment.contentBytes}`;
+    if (attachment.contentId) map[String(attachment.contentId).replace(/[<>]/g, '').toLowerCase()] = dataUrl;
+    if (attachment.name) map[String(attachment.name).toLowerCase()] = dataUrl;
+  }
+  return replaceCidImages(html, map);
+}
+
+async function loadReadableBody(message, token) {
+  if (!message) return '<p></p>';
+  if (message.provider === 'google' && token) {
+    const id = String(message.id).replace(/^gmail:/, '');
+    const raw = await gmailApi(token, `messages/${id}`, { format: 'full' });
+    const html = await inlineGmailImages(token, id, raw.payload, extractGmailHtml(raw.payload));
+    return sanitizeEmailHtml(html || textToHtml(message.body));
+  }
+  if (message.provider === 'microsoft' && token) {
+    const id = String(message.id).replace(/^outlook:/, '');
+    const raw = await graphFetch(token, `me/messages/${encodeURIComponent(id)}?$select=body,hasAttachments`);
+    let html = raw.body?.contentType === 'html'
+      ? unwrapEmailHtml(raw.body.content || '')
+      : textToHtml(raw.body?.content || message.body || '');
+    if (raw.hasAttachments) html = await inlineOutlookImages(token, id, html);
+    return sanitizeEmailHtml(html);
+  }
+  return sanitizeEmailHtml(textToHtml(message.body || ''));
 }
 
 function gmailHeader(headers, name) {
@@ -454,5 +613,8 @@ window.MailwatchMail = {
   fetchOutlookProfile,
   demoMessages,
   formatShortDate,
-  formatFullDate
+  formatFullDate,
+  loadReadableBody,
+  textToHtml,
+  sanitizeEmailHtml
 };

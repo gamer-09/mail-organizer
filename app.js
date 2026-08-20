@@ -379,7 +379,36 @@ function closeModal() {
   state.selectedMessage = null;
 }
 
-function showMessage(messageId) {
+function renderEmailFrame(html) {
+  const frame = $('#emailFrame');
+  const documentHtml = `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; padding: 16px 18px; background: #fff; color: #2c3a3f; font: 15px/1.6 "DM Sans", ui-sans-serif, system-ui, sans-serif; word-wrap: break-word; overflow-wrap: anywhere; }
+  img, video { max-width: 100%; height: auto; border-radius: 6px; }
+  table { max-width: 100%; border-collapse: collapse; }
+  a { color: #2a7566; }
+  p { margin: 0 0 12px; }
+</style></head><body>${html || '<p>This message has no readable content.</p>'}</body></html>`;
+  frame.removeAttribute('height');
+  frame.style.height = '240px';
+  frame.srcdoc = documentHtml;
+  const fit = () => {
+    try {
+      const doc = frame.contentDocument;
+      if (!doc) return;
+      const height = Math.max(doc.documentElement.scrollHeight, doc.body?.scrollHeight || 0, 160);
+      frame.style.height = `${height + 8}px`;
+    } catch {
+      frame.style.height = '60vh';
+    }
+  };
+  frame.onload = fit;
+  setTimeout(fit, 80);
+  setTimeout(fit, 400);
+}
+
+async function showMessage(messageId) {
   const message = state.messages.find((item) => item.id === messageId);
   if (!message) return;
   state.selectedMessage = messageId;
@@ -390,13 +419,32 @@ function showMessage(messageId) {
   $('#detailDate').textContent = message.dateFull;
   $('#messageModalTitle').textContent = message.subject;
   $('#detailSender').textContent = `${message.senderFull} <${message.address}>`;
-  $('#detailBody').textContent = message.body;
   $('#detailStar').classList.toggle('starred', message.starred);
   $('#detailStar svg').setAttribute('fill', message.starred ? 'currentColor' : 'none');
   $('#detailReadButton').textContent = message.unread ? 'Mark as read' : 'Mark as unread';
   const openLabel = message.provider === 'microsoft' ? 'Open in Outlook' : message.provider === 'google' ? 'Open in Gmail' : 'Open original';
   $('#openOriginalButton').querySelector('span').textContent = openLabel;
   openModal('messageModal');
+  $('#detailScroll').scrollTop = 0;
+  if (message.renderedHtml) {
+    renderEmailFrame(message.renderedHtml);
+    return;
+  }
+  renderEmailFrame('<p>Opening message…</p>');
+  try {
+    const account = state.accounts.find((item) => item.provider === message.provider);
+    let token = account?.accessToken;
+    if (account?.provider === 'google') token = await ensureGoogleToken(account, { interactive: false });
+    if (account?.provider === 'microsoft') token = await ensureMicrosoftToken(account, { interactive: false });
+    const html = await Mail.loadReadableBody(message, token);
+    if (state.selectedMessage !== messageId) return;
+    message.renderedHtml = html;
+    renderEmailFrame(html);
+  } catch (error) {
+    console.error(error);
+    if (state.selectedMessage !== messageId) return;
+    renderEmailFrame(Mail.textToHtml(message.body || 'Could not open this message. Use Open original to view it in your mailbox.'));
+  }
 }
 
 function setMessageFlag(messageId, patch) {
