@@ -585,7 +585,8 @@ async function ensureGoogleToken(account, { interactive = true } = {}) {
 
 async function initMsal() {
   if (!state.microsoftClientId) return null;
-  if (!window.msal) return null;
+  const ready = await waitFor(() => Boolean(window.msal?.PublicClientApplication), 8000);
+  if (!ready) return null;
   if (state.msal) return state.msal;
   state.msal = new window.msal.PublicClientApplication({
     auth: {
@@ -596,7 +597,9 @@ async function initMsal() {
     },
     cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
   });
-  await state.msal.initialize();
+  if (typeof state.msal.initialize === 'function') {
+    await state.msal.initialize();
+  }
   return state.msal;
 }
 
