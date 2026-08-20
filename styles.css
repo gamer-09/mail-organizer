@@ -568,6 +568,30 @@ svg { display: block; width: 20px; height: 20px; }
 }
 .connect-card .provider-button + .provider-button { margin-top: 10px; }
 .setup-link { margin-top: 14px; }
+.connect-alt {
+  margin: 12px 0 4px;
+  color: #7e898b;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.account-switch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin-top: 12px;
+}
+.outlook-emphasis { border-color: #c5d3ea; background: #f7f9fd; }
+.sign-out-link {
+  display: inline-flex;
+  margin: 0 4px 14px 12px;
+  padding: 0;
+  color: #9aa8ab;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 600;
+}
+.sign-out-link:hover { color: #f6faf7; }
+.settings-inline-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 24px 20px; }
 .demo-button { width: 100%; }
 .ms-mark {
   display: grid;

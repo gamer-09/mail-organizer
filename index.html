@@ -47,13 +47,18 @@
             <span>Continue with Google</span>
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
-          <button class="provider-button" id="heroMicrosoft" type="button">
+          <button class="provider-button outlook-emphasis" id="heroMicrosoft" type="button">
             <span class="ms-mark" aria-hidden="true">
               <span></span><span></span><span></span><span></span>
             </span>
-            <span>Continue with Microsoft</span>
+            <span>Continue with Outlook</span>
             <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
+          <p class="connect-alt">UNB mail often arrives in Outlook / Microsoft 365. Use that if school messages are not in Gmail.</p>
+          <div class="account-switch-row">
+            <button class="text-button" id="heroSwitchGoogle" type="button">Use another Google account</button>
+            <button class="text-button" id="heroSignOut" type="button">Sign out</button>
+          </div>
           <button class="text-button setup-link" id="openSetupFromHero" type="button">First time? Set up mailbox access</button>
           <div class="modal-divider"><span>or explore</span></div>
           <button class="button button-secondary demo-button" id="heroDemo" type="button">Explore with sample UNB &amp; IRCC mail</button>
@@ -118,6 +123,7 @@
         </div>
 
         <div class="sidebar-footer">
+          <button class="sign-out-link" id="signOutButton" type="button">Sign out</button>
           <div class="privacy-note">
             <span class="privacy-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M6.75 10.25h10.5a1.5 1.5 0 0 1 1.5 1.5v6.5a1.5 1.5 0 0 1-1.5 1.5H6.75a1.5 1.5 0 0 1-1.5-1.5v-6.5a1.5 1.5 0 0 1 1.5-1.5ZM8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
             <span>Only UNB and IRCC mail is surfaced</span>
@@ -238,6 +244,8 @@
                 <div id="connectedAccounts"></div>
                 <div class="settings-inline-actions">
                   <button class="button button-quiet" id="changeMailboxButton" type="button">Add or change account</button>
+                  <button class="button button-quiet" id="switchGoogleButton" type="button">Use another Google account</button>
+                  <button class="button button-quiet" id="signOutSettings" type="button">Sign out</button>
                 </div>
               </section>
               <section class="panel settings-card">
@@ -317,7 +325,7 @@
             <li>Create an OAuth client ID of type <strong>Web application</strong> — not Desktop or iOS.</li>
             <li>Under <strong>Authorized JavaScript origins</strong>, add this exact origin (no trailing slash):</li>
           </ol>
-          <div class="origin-error hidden" id="originError">Google said <strong>no registered origin</strong>. Add the URL below, click Save, wait a minute, then try again.</div>
+          <div class="origin-error hidden" id="originError">Google blocked sign-in. Add this origin, add yourself as a <strong>Test user</strong> on the OAuth consent screen, then try again. You do not need Google verification.</div>
           <div class="origin-row">
             <input class="form-input" id="originCopy" readonly />
             <button class="button button-secondary" id="copyOrigin" type="button">Copy</button>

@@ -626,7 +626,7 @@ function upsertAccount(next) {
   saveStore();
 }
 
-async function connectGoogle() {
+async function connectGoogle({ switchAccount = false } = {}) {
   if (!state.googleClientId.trim()) {
     openSetup('google');
     return;
@@ -637,7 +637,7 @@ async function connectGoogle() {
       showToast('Google sign-in script did not load. Check your network.');
       return;
     }
-    const token = await requestGoogleToken({ prompt: 'consent' });
+    const token = await requestGoogleToken({ prompt: switchAccount ? 'select_account' : 'consent' });
     const profile = await Mail.fetchGmailProfile(token);
     upsertAccount({
       provider: 'google',
@@ -655,15 +655,50 @@ async function connectGoogle() {
   } catch (error) {
     console.error(error);
     const text = String(error.message || error.error || '');
-    if (googleErrorLooksLikeOrigin(error)) {
+    if (googleErrorLooksLikeTester(error)) {
+      showToast('That Google account is not a test user. Use another account, or add it in Google Cloud.');
+    } else if (googleErrorLooksLikeOrigin(error)) {
       openSetup('google', { originError: true });
       showToast('Add this site origin in Google Cloud, then try again');
     } else if (/popup/i.test(text)) {
-      showToast('Sign-in closed. If Google said “no registered origin”, add the origin shown on this page.');
+      showToast('Sign-in closed. Try Outlook, or pick another Google account.');
     } else {
       showToast('Google sign-in did not finish');
     }
   }
+}
+
+async function signOutAll() {
+  const googleAccount = state.accounts.find((account) => account.provider === 'google');
+  if (googleAccount?.accessToken && window.google?.accounts?.oauth2?.revoke) {
+    try {
+      await new Promise((resolve) => {
+        window.google.accounts.oauth2.revoke(googleAccount.accessToken, () => resolve());
+        setTimeout(resolve, 1200);
+      });
+    } catch {
+      /* ignore */
+    }
+  }
+  try {
+    const pca = state.msal || (state.microsoftClientId ? await initMsal() : null);
+    const msalAccount = pca?.getAllAccounts?.()?.[0];
+    if (pca && msalAccount) {
+      await pca.logoutPopup({ account: msalAccount });
+    }
+  } catch {
+    /* user may cancel the Microsoft logout popup */
+  }
+  state.accounts = [];
+  state.messages = [];
+  state.mode = 'connect';
+  state.lastSync = null;
+  saveStore();
+  closeModal();
+  closeSidebar();
+  setConnectVisible(true);
+  updateAccountChrome();
+  showToast('Signed out. You can use another Google account or Outlook.');
 }
 
 async function connectMicrosoft() {
@@ -717,7 +752,12 @@ function disconnectProvider(provider) {
 
 function googleErrorLooksLikeOrigin(error) {
   const text = `${error?.message || ''} ${error?.error || ''} ${error?.details || ''}`.toLowerCase();
-  return /origin|invalid_client|unauthorized_client|access_denied/.test(text);
+  return /origin|invalid_client|unauthorized_client/.test(text);
+}
+
+function googleErrorLooksLikeTester(error) {
+  const text = `${error?.message || ''} ${error?.error || ''} ${error?.details || ''}`.toLowerCase();
+  return /access_denied|verification|tested|test user/.test(text);
 }
 
 function openSetup(provider = 'google', { originError = false } = {}) {
@@ -877,10 +917,16 @@ function bindEvents() {
   $('#addRuleButton').addEventListener('click', openSenderModal);
   $('#editRulesButton').addEventListener('click', openSenderModal);
   $('#changeMailboxButton').addEventListener('click', () => openModal('connectModal'));
-  $('#connectGmail').addEventListener('click', connectGoogle);
+  $('#connectGmail').addEventListener('click', () => connectGoogle());
   $('#connectMicrosoft').addEventListener('click', connectMicrosoft);
-  $('#heroGoogle').addEventListener('click', connectGoogle);
+  $('#heroGoogle').addEventListener('click', () => connectGoogle());
   $('#heroMicrosoft').addEventListener('click', connectMicrosoft);
+  $('#heroSwitchGoogle')?.addEventListener('click', () => connectGoogle({ switchAccount: true }));
+  $('#connectSwitchGoogle')?.addEventListener('click', () => connectGoogle({ switchAccount: true }));
+  $('#switchGoogleButton')?.addEventListener('click', () => connectGoogle({ switchAccount: true }));
+  $('#heroSignOut')?.addEventListener('click', signOutAll);
+  $('#signOutButton')?.addEventListener('click', signOutAll);
+  $('#signOutSettings')?.addEventListener('click', signOutAll);
   $('#heroDemo').addEventListener('click', enterDemo);
   $('#openSetupFromHero').addEventListener('click', () => openSetup('google'));
   $('#openSetupFromConnect').addEventListener('click', () => openSetup('google'));
