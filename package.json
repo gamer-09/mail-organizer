@@ -1,0 +1,16 @@
+{
+  "name": "mailwatch",
+  "version": "0.2.0",
+  "private": true,
+  "description": "A focused inbox for University of New Brunswick (Fredericton) and IRCC mail.",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

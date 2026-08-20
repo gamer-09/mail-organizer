@@ -1,125 +1,35 @@
-const messages = [
-  {
-    id: 'ircc-1',
-    category: 'ircc',
-    sender: 'IRCC',
-    senderFull: 'Immigration, Refugees and Citizenship Canada',
-    address: 'no-reply@cic.gc.ca',
-    initials: 'IR',
-    subject: 'Biometrics instruction letter available',
-    snippet: 'Your application requires action. Review the instructions and book your appointment.',
-    date: 'Today',
-    dateFull: 'Today at 9:18 AM',
-    unread: true,
-    priority: true,
-    tag: 'Action',
-    tagClass: 'tag-action',
-    starred: false,
-    body: 'Hello Jordan,\n\nA new biometrics instruction letter is available in your IRCC account. Please review the letter carefully and follow the instructions within the timeframe provided.\n\nSign in to your IRCC secure account to view the full notice.'
-  },
-  {
-    id: 'school-1',
-    category: 'school',
-    sender: 'Harbourview College',
-    senderFull: 'Harbourview College Student Services',
-    address: 'studentservices@harbourview.edu',
-    initials: 'HV',
-    subject: 'Tuition payment deadline — Fall 2026',
-    snippet: 'Your next payment is due on September 5. View your balance and payment options.',
-    date: 'Yesterday',
-    dateFull: 'Yesterday at 3:42 PM',
-    unread: true,
-    priority: true,
-    tag: 'Deadline',
-    tagClass: 'tag-deadline',
-    starred: true,
-    body: 'Hi Jordan,\n\nThis is a friendly reminder that your Fall 2026 tuition payment is due on September 5, 2026. You can view your current balance and payment options in the student portal.\n\nPlease contact Student Services if you have questions.'
-  },
-  {
-    id: 'ircc-2',
-    category: 'ircc',
-    sender: 'IRCC',
-    senderFull: 'Immigration, Refugees and Citizenship Canada',
-    address: 'client-update@cic.gc.ca',
-    initials: 'IR',
-    subject: 'Your application status has been updated',
-    snippet: 'There has been a change to your application. Sign in to view the latest update.',
-    date: 'Aug 18',
-    dateFull: 'August 18, 2026 at 11:06 AM',
-    unread: true,
-    priority: false,
-    tag: 'Update',
-    tagClass: 'tag-update',
-    starred: false,
-    body: 'Hello Jordan,\n\nThere has been a change to the status of your application. Sign in to your IRCC secure account to view the latest details.\n\nThis is an automated message. Please do not reply to this email.'
-  },
-  {
-    id: 'school-2',
-    category: 'school',
-    sender: 'Harbourview College',
-    senderFull: 'Harbourview College Registrar',
-    address: 'registrar@harbourview.edu',
-    initials: 'HV',
-    subject: 'Your Fall 2026 timetable is ready',
-    snippet: 'Your class schedule is now available in the student portal.',
-    date: 'Aug 17',
-    dateFull: 'August 17, 2026 at 8:30 AM',
-    unread: false,
-    priority: false,
-    tag: 'Info',
-    tagClass: 'tag-info',
-    starred: false,
-    body: 'Hi Jordan,\n\nYour Fall 2026 timetable is now available. Please sign in to the student portal to review your classes, rooms, and start times.\n\nIf anything looks incorrect, contact the Registrar before the first week of classes.'
-  },
-  {
-    id: 'school-3',
-    category: 'school',
-    sender: 'Harbourview College',
-    senderFull: 'Harbourview College Admissions',
-    address: 'admissions@harbourview.edu',
-    initials: 'HV',
-    subject: 'Welcome to the Fall 2026 term',
-    snippet: 'A few important dates and resources before classes begin.',
-    date: 'Aug 15',
-    dateFull: 'August 15, 2026 at 1:16 PM',
-    unread: false,
-    priority: false,
-    tag: 'Welcome',
-    tagClass: 'tag-reply',
-    starred: false,
-    body: 'Welcome, Jordan!\n\nThe Fall 2026 term is almost here. We have collected orientation details, campus resources, and key dates in the student hub.\n\nWe look forward to seeing you on campus.'
-  },
-  {
-    id: 'ircc-3',
-    category: 'ircc',
-    sender: 'IRCC',
-    senderFull: 'Immigration, Refugees and Citizenship Canada',
-    address: 'updates@cic.gc.ca',
-    initials: 'IR',
-    subject: 'We received your application',
-    snippet: 'Keep this message for your records. Your application number is available online.',
-    date: 'Aug 12',
-    dateFull: 'August 12, 2026 at 4:55 PM',
-    unread: false,
-    priority: false,
-    tag: 'Update',
-    tagClass: 'tag-update',
-    starred: false,
-    body: 'Hello Jordan,\n\nWe have received your application. Keep this message for your records and use your application number when contacting us.\n\nYou can check your application status through your IRCC secure account.'
-  }
-];
+const STORAGE_KEY = 'mailwatch.v1';
+const GOOGLE_SCOPES = [
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/userinfo.email',
+  'https://www.googleapis.com/auth/userinfo.profile'
+].join(' ');
+const MICROSOFT_SCOPES = ['User.Read', 'Mail.Read'];
 
-let rules = [
-  { name: 'My school', address: 'harbourview.edu', initials: 'HV', kind: 'school' },
-  { name: 'IRCC', address: 'cic.gc.ca', initials: 'IR', kind: 'ircc' }
-];
+const Mail = window.MailwatchMail;
 
 const state = {
+  mode: 'connect',
+  accounts: [],
+  messages: [],
+  watchlist: Mail.DEFAULT_WATCHLIST.map((rule) => ({ ...rule, domains: [...rule.domains] })),
+  extraSenders: [],
   activeFilter: 'all',
   query: '',
   currentView: 'overview',
   selectedMessage: null,
-  toastTimer: null
+  toastTimer: null,
+  googleClientId: '',
+  microsoftClientId: '',
+  googleTokenClient: null,
+  msal: null,
+  syncing: false,
+  lastSync: null,
+  prefs: {
+    browserAlert: true,
+    digest: false
+  },
+  localFlags: {}
 };
 
 const $ = (selector, root = document) => root.querySelector(selector);
@@ -135,16 +45,220 @@ function escapeHtml(value = '') {
   }[character]));
 }
 
+function initialsFrom(name = '') {
+  const parts = String(name).split(/\s+/).filter(Boolean);
+  if (!parts.length) return 'MW';
+  return parts.slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+}
+
+function loadStore() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function saveStore() {
+  const current = loadStore();
+  const next = {
+    ...current,
+    googleClientId: state.googleClientId,
+    microsoftClientId: state.microsoftClientId,
+    extraSenders: state.extraSenders,
+    prefs: state.prefs,
+    localFlags: state.localFlags,
+    lastEmails: state.accounts.map((account) => ({
+      provider: account.provider,
+      email: account.email,
+      name: account.name,
+      givenName: account.givenName,
+      picture: account.picture
+    }))
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+}
+
+function applyFlags(messages) {
+  return messages.map((message) => {
+    const flags = state.localFlags[message.id];
+    if (!flags) return message;
+    return { ...message, ...flags };
+  });
+}
+
+function effectiveWatchlist() {
+  return [
+    ...state.watchlist,
+    ...state.extraSenders.map((sender) => ({
+      id: sender.id,
+      name: sender.name,
+      shortName: sender.name,
+      initials: sender.initials,
+      kind: sender.kind || 'other',
+      domains: [sender.address.replace(/^@/, '')],
+      nameHints: []
+    }))
+  ];
+}
+
+function waitFor(predicate, timeout = 8000) {
+  return new Promise((resolve) => {
+    if (predicate()) return resolve(true);
+    const started = Date.now();
+    const timer = setInterval(() => {
+      if (predicate()) {
+        clearInterval(timer);
+        resolve(true);
+      } else if (Date.now() - started > timeout) {
+        clearInterval(timer);
+        resolve(false);
+      }
+    }, 40);
+  });
+}
+
+function showToast(message) {
+  const toast = $('#toast');
+  $('#toastMessage').textContent = message;
+  toast.classList.add('show');
+  clearTimeout(state.toastTimer);
+  state.toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+}
+
+function setConnectVisible(visible) {
+  $('#connectScreen').classList.toggle('hidden', !visible);
+  $('#appShell').classList.toggle('hidden', visible);
+}
+
+function currentOrigin() {
+  return window.location.origin;
+}
+
+function weekdayHeadline() {
+  return new Date().toLocaleDateString('en-CA', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric'
+  }).toUpperCase();
+}
+
+function greetingName() {
+  const live = state.accounts[0];
+  if (live?.givenName) return live.givenName;
+  if (live?.name) return live.name.split(' ')[0];
+  if (state.mode === 'demo') return 'there';
+  return 'there';
+}
+
+function primaryAccount() {
+  return state.accounts[0] || null;
+}
+
+function updateAccountChrome() {
+  const account = primaryAccount();
+  const email = account?.email || (state.mode === 'demo' ? 'Demo inbox' : 'Not connected');
+  const name = account?.name || (state.mode === 'demo' ? 'Demo' : 'Mailwatch');
+  const initials = initialsFrom(name === 'Demo' ? 'Demo Watch' : name);
+  $$('[data-account-email]').forEach((node) => { node.textContent = email; });
+  $$('[data-account-initials]').forEach((node) => { node.textContent = initials; });
+  $('#accountEyebrow').textContent = state.mode === 'live' ? 'Watching inbox' : state.mode === 'demo' ? 'Demo mode' : 'Mailbox';
+  $('#onlineDot').classList.toggle('offline', state.mode !== 'live');
+  const health = $('#healthValue');
+  const healthFoot = $('#healthFoot');
+  if (state.mode === 'live') {
+    health.textContent = 'Healthy';
+    healthFoot.innerHTML = `<span class="trend green-text">Connected</span> · ${state.accounts.map((item) => item.provider === 'google' ? 'Gmail' : 'Outlook').join(' + ')}`;
+  } else if (state.mode === 'demo') {
+    health.textContent = 'Demo';
+    healthFoot.innerHTML = '<span class="trend blue-text">Sample mail</span> · connect to go live';
+  } else {
+    health.textContent = 'Idle';
+    healthFoot.innerHTML = '<span class="trend warm-text">Not connected</span>';
+  }
+  const connectedBadge = $('#connectedBadge');
+  if (connectedBadge) {
+    connectedBadge.classList.toggle('disconnected-badge', state.mode !== 'live');
+    connectedBadge.innerHTML = state.mode === 'live'
+      ? '<span></span> Connected'
+      : state.mode === 'demo' ? '<span></span> Demo' : '<span></span> Off';
+  }
+  const settingsMeta = $('#settingsAccountMeta');
+  if (settingsMeta) {
+    const providers = state.accounts.map((item) => item.provider === 'google' ? 'Gmail' : 'Outlook').join(' · ') || 'No mailbox';
+    settingsMeta.textContent = state.mode === 'demo' ? 'Sample UNB and IRCC messages' : providers;
+  }
+  const hour = new Date().getHours();
+  $('#greetingLead').textContent = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  $('#greetingName').textContent = greetingName();
+  $('#todayOverline').textContent = weekdayHeadline();
+  $('#originCopy').value = currentOrigin();
+  $('#originCopyMs').value = currentOrigin();
+  $('#googleClientInput').value = state.googleClientId;
+  $('#microsoftClientInput').value = state.microsoftClientId;
+  $('#googleClientSettings').value = state.googleClientId;
+  $('#microsoftClientSettings').value = state.microsoftClientId;
+  renderConnectedAccounts();
+}
+
+function renderConnectedAccounts() {
+  const host = $('#connectedAccounts');
+  if (!host) return;
+  if (!state.accounts.length && state.mode === 'demo') {
+    host.innerHTML = `
+      <div class="connected-account">
+        <span class="large-account-avatar">DW</span>
+        <div>
+          <strong>Demo inbox</strong>
+          <span>Sample UNB Fredericton and IRCC mail</span>
+        </div>
+        <button class="button button-quiet" id="leaveDemoButton" type="button">Connect a mailbox</button>
+      </div>`;
+    $('#leaveDemoButton')?.addEventListener('click', () => {
+      state.mode = 'connect';
+      setConnectVisible(true);
+    });
+    return;
+  }
+  if (!state.accounts.length) {
+    host.innerHTML = `
+      <div class="connected-account">
+        <span class="large-account-avatar">+</span>
+        <div>
+          <strong>No mailbox connected</strong>
+          <span>Link Gmail or Outlook to start watching UNB and IRCC.</span>
+        </div>
+        <button class="button button-quiet" id="connectFromSettings" type="button">Connect</button>
+      </div>`;
+    $('#connectFromSettings')?.addEventListener('click', () => openModal('connectModal'));
+    return;
+  }
+  host.innerHTML = state.accounts.map((account) => `
+    <div class="connected-account">
+      <span class="large-account-avatar">${escapeHtml(initialsFrom(account.name || account.email))}</span>
+      <div>
+        <strong>${escapeHtml(account.email)}</strong>
+        <span>${account.provider === 'google' ? 'Gmail' : 'Outlook'} · read-only</span>
+      </div>
+      <button class="button button-quiet" type="button" data-disconnect="${escapeHtml(account.provider)}">Disconnect</button>
+    </div>
+  `).join('');
+  $$('[data-disconnect]', host).forEach((button) => {
+    button.addEventListener('click', () => disconnectProvider(button.dataset.disconnect));
+  });
+}
+
 function getVisibleMessages() {
   const normalizedQuery = state.query.trim().toLowerCase();
-  return messages.filter((message) => {
+  return state.messages.filter((message) => {
     const matchesFilter = state.activeFilter === 'all'
-      || state.activeFilter === 'priority' && message.priority
-      || state.activeFilter === message.category;
+      || (state.activeFilter === 'priority' && message.priority)
+      || message.category === state.activeFilter;
     if (!matchesFilter) return false;
     if (!normalizedQuery) return true;
     return [message.sender, message.senderFull, message.address, message.subject, message.snippet]
-      .some((value) => value.toLowerCase().includes(normalizedQuery));
+      .some((value) => String(value).toLowerCase().includes(normalizedQuery));
   });
 }
 
@@ -153,55 +267,94 @@ function renderMessages() {
   const list = $('#messageList');
   const emptyState = $('#emptyState');
   $('#messageCount').textContent = visibleMessages.length;
-
   list.innerHTML = visibleMessages.map((message) => `
-    <article class="message-row ${message.unread ? 'unread' : ''}" data-message="${message.id}" tabindex="0" role="button" aria-label="Open ${escapeHtml(message.subject)}">
-      <span class="message-avatar ${message.category === 'school' ? 'school-mark' : 'ircc-mark'}">${escapeHtml(message.initials)}</span>
+    <article class="message-row ${message.unread ? 'unread' : ''}" data-message="${escapeHtml(message.id)}" tabindex="0" role="button" aria-label="Open ${escapeHtml(message.subject)}">
+      <span class="message-avatar ${message.category === 'school' ? 'school-mark' : message.category === 'ircc' ? 'ircc-mark' : 'other-mark'}">${escapeHtml(message.initials)}</span>
       <span class="sender-cell"><strong>${escapeHtml(message.sender)}</strong>${message.unread ? '<span class="unread-dot" aria-label="Unread"></span>' : ''}</span>
       <span class="subject-cell"><strong>${escapeHtml(message.subject)}</strong><span>${escapeHtml(message.snippet)}</span></span>
       <span class="message-tags"><span class="tag ${escapeHtml(message.tagClass)}">${escapeHtml(message.tag)}</span></span>
       <span class="message-date">${escapeHtml(message.date)}</span>
-      <button class="star-button ${message.starred ? 'starred' : ''}" data-star-message="${message.id}" aria-label="${message.starred ? 'Unstar' : 'Star'} message">
+      <button class="star-button ${message.starred ? 'starred' : ''}" data-star-message="${escapeHtml(message.id)}" aria-label="${message.starred ? 'Unstar' : 'Star'} message">
         <svg viewBox="0 0 24 24" fill="${message.starred ? 'currentColor' : 'none'}"><path d="m12 4.25 2.36 4.78 5.28.77-3.82 3.72.9 5.26L12 16.3l-4.72 2.48.9-5.26-3.82-3.72 5.28-.77L12 4.25Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
       </button>
     </article>
   `).join('');
-
   list.classList.toggle('hidden', visibleMessages.length === 0);
   emptyState.classList.toggle('hidden', visibleMessages.length !== 0);
+  const emptyCopy = state.mode === 'live'
+    ? 'Mailwatch is watching UNB and IRCC. Nothing matching right now.'
+    : 'Try another search or filter.';
+  $('#emptyStateCopy').textContent = emptyCopy;
   updateStats();
+  renderAttention();
 }
 
 function updateStats() {
-  const unread = messages.filter((message) => message.unread).length;
-  const attention = messages.filter((message) => message.priority && message.unread).length;
+  const unread = state.messages.filter((message) => message.unread).length;
+  const attention = state.messages.filter((message) => message.priority && message.unread).length;
+  const weekAgo = Date.now() - 7 * 86400000;
+  const weekCount = state.messages.filter((message) => message.receivedAt >= weekAgo).length;
   $('#unreadStat').textContent = unread;
   $('#attentionStat').textContent = attention;
+  $('#weekStat').textContent = weekCount;
+  $('#senderWatchCount').textContent = `${effectiveWatchlist().length} senders`;
   $('.attention-total').textContent = attention;
   $('.nav-count').textContent = attention;
+  const badge = $('#notificationBadge');
+  badge.textContent = attention;
+  badge.classList.toggle('hidden', attention === 0);
+  const unreadTrend = unread === 0 ? 'All caught up' : `${unread} waiting`;
+  $('#unreadFoot').innerHTML = `<span class="trend ${unread ? 'up' : 'green-text'}">${unread ? '↑' : '✓'}</span> ${unreadTrend}`;
+}
+
+function renderAttention() {
+  const items = state.messages.filter((message) => message.priority && message.unread).slice(0, 4);
+  const host = $('#attentionList');
+  if (!items.length) {
+    host.innerHTML = `<div class="attention-empty">Nothing urgent from UNB or IRCC.</div>`;
+    return;
+  }
+  host.innerHTML = items.map((message) => `
+    <button class="attention-item" data-message="${escapeHtml(message.id)}" type="button">
+      <span class="attention-icon ${message.category === 'school' ? 'school-mark' : 'ircc-mark'}">${escapeHtml(message.initials)}</span>
+      <span class="attention-copy"><strong>${escapeHtml(message.sender)}</strong><span>${escapeHtml(message.subject)}</span></span>
+      <span class="attention-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </button>
+  `).join('');
+  $$('.attention-item', host).forEach((item) => {
+    item.addEventListener('click', () => showMessage(item.dataset.message));
+  });
 }
 
 function renderRules() {
+  const rules = effectiveWatchlist();
   $('#ruleList').innerHTML = rules.map((rule) => `
     <div class="rule-row">
       <span class="rule-avatar ${rule.kind === 'school' ? 'school-avatar' : rule.kind === 'ircc' ? 'ircc-avatar' : ''}">${escapeHtml(rule.initials)}</span>
-      <div class="rule-copy"><strong>${escapeHtml(rule.name)}</strong><span>${escapeHtml(rule.address)}</span></div>
+      <div class="rule-copy"><strong>${escapeHtml(rule.name)}</strong><span>${escapeHtml((rule.domains || [rule.address]).join(', '))}</span></div>
       <span class="rule-status"></span>
     </div>
   `).join('');
-  $('.nav-item[data-view="senders"] span:last-child');
+  $('#watchingCount').textContent = `Watching ${rules.length} sender group${rules.length === 1 ? '' : 's'}`;
 }
 
 function updateFilterTabs() {
   $$('.filter-tab').forEach((tab) => tab.classList.toggle('active', tab.dataset.filter === state.activeFilter));
 }
 
-function showToast(message) {
-  const toast = $('#toast');
-  $('#toastMessage').textContent = message;
-  toast.classList.add('show');
-  clearTimeout(state.toastTimer);
-  state.toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+function updateSyncStatus() {
+  if (state.syncing) {
+    $('#syncStatus').textContent = 'Checking mailbox…';
+    return;
+  }
+  if (!state.lastSync) {
+    $('#syncStatus').textContent = state.mode === 'demo' ? 'Demo data' : 'Not synced yet';
+    return;
+  }
+  const delta = Date.now() - state.lastSync;
+  if (delta < 15000) $('#syncStatus').textContent = 'Synced just now';
+  else if (delta < 60000) $('#syncStatus').textContent = 'Synced moments ago';
+  else $('#syncStatus').textContent = `Synced ${Math.max(1, Math.round(delta / 60000))} min ago`;
 }
 
 function openModal(id) {
@@ -224,45 +377,33 @@ function closeModal() {
 }
 
 function showMessage(messageId) {
-  const message = messages.find((item) => item.id === messageId);
+  const message = state.messages.find((item) => item.id === messageId);
   if (!message) return;
   state.selectedMessage = messageId;
   const avatar = $('#detailAvatar');
   avatar.textContent = message.initials;
-  avatar.className = `detail-avatar ${message.category === 'school' ? 'school-mark' : 'ircc-mark'}`;
-  $('#detailCategory').textContent = message.category === 'school' ? 'MY SCHOOL' : 'IRCC';
+  avatar.className = `detail-avatar ${message.category === 'school' ? 'school-mark' : message.category === 'ircc' ? 'ircc-mark' : 'other-mark'}`;
+  $('#detailCategory').textContent = message.category === 'school' ? 'UNB FREDERICTON' : message.category === 'ircc' ? 'IRCC' : 'WATCHLIST';
   $('#detailDate').textContent = message.dateFull;
   $('#messageModalTitle').textContent = message.subject;
   $('#detailSender').textContent = `${message.senderFull} <${message.address}>`;
   $('#detailBody').textContent = message.body;
   $('#detailStar').classList.toggle('starred', message.starred);
   $('#detailStar svg').setAttribute('fill', message.starred ? 'currentColor' : 'none');
-  $('#detailStar').setAttribute('aria-label', message.starred ? 'Unstar message' : 'Star message');
   $('#detailReadButton').textContent = message.unread ? 'Mark as read' : 'Mark as unread';
+  const openLabel = message.provider === 'microsoft' ? 'Open in Outlook' : message.provider === 'google' ? 'Open in Gmail' : 'Open original';
+  $('#openOriginalButton').querySelector('span').textContent = openLabel;
   openModal('messageModal');
 }
 
-function setMessageStar(messageId) {
-  const message = messages.find((item) => item.id === messageId);
+function setMessageFlag(messageId, patch) {
+  const message = state.messages.find((item) => item.id === messageId);
   if (!message) return;
-  message.starred = !message.starred;
+  Object.assign(message, patch);
+  state.localFlags[messageId] = { ...(state.localFlags[messageId] || {}), ...patch };
+  saveStore();
   renderMessages();
-  if (state.selectedMessage === messageId) {
-    $('#detailStar').classList.toggle('starred', message.starred);
-    $('#detailStar svg').setAttribute('fill', message.starred ? 'currentColor' : 'none');
-  }
-  showToast(message.starred ? 'Message starred' : 'Removed star');
-}
-
-function toggleRead(messageId) {
-  const message = messages.find((item) => item.id === messageId);
-  if (!message) return;
-  message.unread = !message.unread;
-  renderMessages();
-  if (state.selectedMessage === messageId) {
-    $('#detailReadButton').textContent = message.unread ? 'Mark as read' : 'Mark as unread';
-  }
-  showToast(message.unread ? 'Marked as unread' : 'Marked as read');
+  if (state.selectedMessage === messageId) showMessage(messageId);
 }
 
 function setView(view) {
@@ -271,28 +412,20 @@ function setView(view) {
   if (view === 'priority' || view === 'senders') section = 'overview';
   $$('.view-section').forEach((item) => item.classList.toggle('active', item.id === `${section}View`));
   $$('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.view === view));
-
   const labels = { overview: 'Overview', priority: 'Priority inbox', senders: 'Monitored senders', settings: 'Settings', help: 'How it works' };
   $('#breadcrumbCurrent').textContent = labels[view] || 'Overview';
-
   if (view === 'priority') {
     state.activeFilter = 'priority';
     $('#inboxTitle').textContent = 'Priority inbox';
-    $('.inbox-heading p').textContent = 'The messages most likely to need a next step.';
-    updateFilterTabs();
-    renderMessages();
-  } else if (view === 'overview') {
+    $('.inbox-heading p').textContent = 'The UNB and IRCC messages most likely to need a next step.';
+  } else if (view === 'overview' || view === 'senders') {
     state.activeFilter = 'all';
     $('#inboxTitle').textContent = 'Your watchlist';
-    $('.inbox-heading p').textContent = 'Messages from the people and teams you care about.';
-    updateFilterTabs();
-    renderMessages();
-  } else if (view === 'senders') {
-    state.activeFilter = 'all';
-    $('#inboxTitle').textContent = 'Your watchlist';
-    $('.inbox-heading p').textContent = 'Messages from the people and teams you care about.';
-    updateFilterTabs();
-    renderMessages();
+    $('.inbox-heading p').textContent = 'Messages from UNB Fredericton and IRCC.';
+  }
+  updateFilterTabs();
+  renderMessages();
+  if (view === 'senders') {
     setTimeout(() => $('#rulesPanel').scrollIntoView({ behavior: 'smooth', block: 'center' }), 30);
   }
   closeSidebar();
@@ -308,136 +441,519 @@ function closeSidebar() {
   $('#sidebarOverlay').classList.remove('open');
 }
 
-function syncMailbox() {
+function notifyNewMail(previousIds, nextMessages) {
+  if (!state.prefs.browserAlert || state.mode !== 'live') return;
+  if (!previousIds) return;
+  const fresh = nextMessages.filter((message) => !previousIds.has(message.id) && message.unread);
+  if (!fresh.length) return;
+  const first = fresh[0];
+  if (Notification.permission === 'granted') {
+    try {
+      new Notification(`${first.sender}: ${first.subject}`, { body: first.snippet, silent: false });
+    } catch {
+      /* ignore */
+    }
+  }
+  showToast(fresh.length === 1 ? `New mail from ${first.sender}` : `${fresh.length} new watched messages`);
+}
+
+async function requestNotifications() {
+  if (!state.prefs.browserAlert) return;
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    try { await Notification.requestPermission(); } catch { /* ignore */ }
+  }
+}
+
+async function syncMailbox({ silent = false } = {}) {
+  if (state.syncing) return;
   const button = $('#syncButton');
-  if (button.classList.contains('syncing')) return;
-  button.classList.add('syncing');
-  button.disabled = true;
+  state.syncing = true;
+  button?.classList.add('syncing');
+  if (button) button.disabled = true;
   $('#syncButtonText').textContent = 'Checking…';
-  $('#syncStatus').textContent = 'Checking mailbox…';
-  setTimeout(() => {
-    button.classList.remove('syncing');
-    button.disabled = false;
+  updateSyncStatus();
+  const previousIds = silent ? new Set(state.messages.map((message) => message.id)) : null;
+  try {
+    if (state.mode === 'demo') {
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      state.messages = applyFlags(Mail.demoMessages(effectiveWatchlist()));
+    } else if (state.mode === 'live') {
+      const bundles = await Promise.all(state.accounts.map(async (account) => {
+        try {
+          if (account.provider === 'google') {
+            account.accessToken = await ensureGoogleToken(account, { interactive: false });
+            return Mail.fetchGmailMessages(account.accessToken, effectiveWatchlist(), account.provider);
+          }
+          account.accessToken = await ensureMicrosoftToken(account, { interactive: false });
+          return Mail.fetchOutlookMessages(account.accessToken, effectiveWatchlist(), account.provider);
+        } catch (error) {
+          if (error.status === 401 && !silent) {
+            showToast(`Reconnect ${account.provider === 'google' ? 'Gmail' : 'Outlook'}`);
+          }
+          return [];
+        }
+      }));
+      const merged = bundles.flat().sort((a, b) => b.receivedAt - a.receivedAt);
+      notifyNewMail(previousIds, merged);
+      state.messages = applyFlags(merged);
+    }
+    state.lastSync = Date.now();
+    renderMessages();
+    if (!silent) showToast(state.mode === 'demo' ? 'Demo watchlist is up to date' : 'Mailbox is up to date');
+  } catch (error) {
+    console.error(error);
+    if (!silent) showToast('Could not sync mailbox');
+  } finally {
+    state.syncing = false;
+    button?.classList.remove('syncing');
+    if (button) button.disabled = false;
     $('#syncButtonText').textContent = 'Sync now';
-    $('#syncStatus').textContent = 'Synced just now';
-    showToast('Mailbox is up to date');
-  }, 1150);
+    updateSyncStatus();
+  }
 }
 
-function connectMailbox() {
-  closeModal();
-  $('#syncStatus').textContent = 'Synced just now';
-  showToast('Mailbox connected — watchlist is active');
-}
-
-// Initial render
-renderMessages();
-renderRules();
-
-// Navigation
-$$('.nav-item').forEach((item) => item.addEventListener('click', () => setView(item.dataset.view)));
-
-// Inbox filtering and search
-$$('.filter-tab').forEach((tab) => tab.addEventListener('click', () => {
-  state.activeFilter = tab.dataset.filter;
-  state.currentView = 'overview';
-  $$('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.view === 'overview'));
-  $('#breadcrumbCurrent').textContent = 'Overview';
-  $('#inboxTitle').textContent = 'Your watchlist';
-  $('.inbox-heading p').textContent = 'Messages from the people and teams you care about.';
-  updateFilterTabs();
-  renderMessages();
-}));
-
-$('#searchInput').addEventListener('input', (event) => {
-  state.query = event.target.value;
-  renderMessages();
-});
-
-$('#messageList').addEventListener('click', (event) => {
-  const starButton = event.target.closest('[data-star-message]');
-  if (starButton) {
-    event.stopPropagation();
-    setMessageStar(starButton.dataset.starMessage);
-    return;
-  }
-  const row = event.target.closest('[data-message]');
-  if (row) showMessage(row.dataset.message);
-});
-
-$('#messageList').addEventListener('keydown', (event) => {
-  if ((event.key === 'Enter' || event.key === ' ') && event.target.closest('[data-message]')) {
-    event.preventDefault();
-    showMessage(event.target.closest('[data-message]').dataset.message);
-  }
-});
-
-$$('.attention-item').forEach((item) => item.addEventListener('click', () => showMessage(item.dataset.message)));
-
-// Mail actions
-$('#markAllRead').addEventListener('click', () => {
-  const unread = messages.filter((message) => message.unread);
-  if (!unread.length) {
-    showToast('Everything is already read');
-    return;
-  }
-  messages.forEach((message) => { message.unread = false; });
-  renderMessages();
-  showToast(`${unread.length} messages marked as read`);
-});
-$('#syncButton').addEventListener('click', syncMailbox);
-$('#notificationButton').addEventListener('click', () => {
-  setView('priority');
-  showToast('Showing your 2 priority messages');
-});
-$('#viewAllButton').addEventListener('click', () => setView('senders'));
-
-// Sidebar on narrow screens
-$('#openSidebar').addEventListener('click', () => {
-  $('#sidebar').classList.add('open');
-  $('#sidebarOverlay').classList.add('open');
-});
-$('#closeSidebar').addEventListener('click', closeSidebar);
-$('#sidebarOverlay').addEventListener('click', closeSidebar);
-
-// Modals
-$('#monitorButton').addEventListener('click', openSenderModal);
-$('#addRuleButton').addEventListener('click', openSenderModal);
-$('#editRulesButton').addEventListener('click', openSenderModal);
-$('#changeMailboxButton').addEventListener('click', () => openModal('connectModal'));
-$('#connectGmail').addEventListener('click', connectMailbox);
-$('#settingsSaveButton').addEventListener('click', () => showToast('Preferences saved'));
-$('#keywordButton').addEventListener('click', () => showToast('Keyword alerts are ready to configure next'));
-$('#openOriginalButton').addEventListener('click', () => showToast('Gmail links will open here once OAuth is connected'));
-$('#detailStar').addEventListener('click', () => {
-  if (state.selectedMessage) setMessageStar(state.selectedMessage);
-});
-$('#detailReadButton').addEventListener('click', () => {
-  if (state.selectedMessage) toggleRead(state.selectedMessage);
-});
-
-$('#senderForm').addEventListener('submit', (event) => {
-  event.preventDefault();
-  const formData = new FormData(event.currentTarget);
-  const address = String(formData.get('address') || '').trim();
-  const name = String(formData.get('name') || '').trim() || address.split('@')[0] || 'New sender';
-  if (!address) return;
-  const exists = rules.some((rule) => rule.address.toLowerCase() === address.toLowerCase());
-  if (exists) {
-    closeModal();
-    showToast('That sender is already on your watchlist');
-    return;
-  }
-  const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]).join('').toUpperCase() || 'NW';
-  rules.push({ name, address, initials, kind: 'other' });
+function enterApp(mode) {
+  state.mode = mode;
+  setConnectVisible(false);
+  updateAccountChrome();
   renderRules();
-  closeModal();
-  showToast(`${name} added to your watchlist`);
-});
+  setView('overview');
+  syncMailbox({ silent: true });
+}
 
-$('#modalBackdrop').addEventListener('click', (event) => {
-  if (event.target === event.currentTarget || event.target.closest('[data-close-modal]')) closeModal();
-});
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && $('#modalBackdrop').classList.contains('open')) closeModal();
-});
+function enterDemo() {
+  state.accounts = [];
+  state.messages = applyFlags(Mail.demoMessages(effectiveWatchlist()));
+  state.lastSync = Date.now();
+  enterApp('demo');
+  showToast('Exploring with sample UNB and IRCC mail');
+}
+
+async function initGoogleClient() {
+  if (!state.googleClientId) return null;
+  const ready = await waitFor(() => Boolean(window.google?.accounts?.oauth2), 8000);
+  if (!ready) return null;
+  state.googleTokenClient = window.google.accounts.oauth2.initTokenClient({
+    client_id: state.googleClientId,
+    scope: GOOGLE_SCOPES,
+    callback: () => {}
+  });
+  return state.googleTokenClient;
+}
+
+function requestGoogleToken({ prompt = 'consent', hint = '' } = {}) {
+  return new Promise((resolve, reject) => {
+    if (!state.googleTokenClient) {
+      reject(new Error('Google client is not ready'));
+      return;
+    }
+    state.googleTokenClient.callback = (response) => {
+      if (response.error) {
+        reject(new Error(response.error_description || response.error));
+        return;
+      }
+      resolve(response.access_token);
+    };
+    const options = { prompt };
+    if (hint) options.hint = hint;
+    state.googleTokenClient.requestAccessToken(options);
+  });
+}
+
+async function ensureGoogleToken(account, { interactive = true } = {}) {
+  if (account.accessToken && account.expiresAt && account.expiresAt - 30000 > Date.now()) {
+    return account.accessToken;
+  }
+  await initGoogleClient();
+  try {
+    const token = await requestGoogleToken({ prompt: '', hint: account.email });
+    account.accessToken = token;
+    account.expiresAt = Date.now() + 55 * 60 * 1000;
+    return token;
+  } catch (error) {
+    if (!interactive) throw error;
+    const token = await requestGoogleToken({ prompt: 'consent', hint: account.email });
+    account.accessToken = token;
+    account.expiresAt = Date.now() + 55 * 60 * 1000;
+    return token;
+  }
+}
+
+async function initMsal() {
+  if (!state.microsoftClientId) return null;
+  if (!window.msal) return null;
+  if (state.msal) return state.msal;
+  state.msal = new window.msal.PublicClientApplication({
+    auth: {
+      clientId: state.microsoftClientId,
+      authority: 'https://login.microsoftonline.com/common',
+      redirectUri: currentOrigin(),
+      postLogoutRedirectUri: currentOrigin()
+    },
+    cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
+  });
+  await state.msal.initialize();
+  return state.msal;
+}
+
+async function ensureMicrosoftToken(account, { interactive = true } = {}) {
+  const pca = await initMsal();
+  if (!pca) throw new Error('Microsoft client is not ready');
+  const accounts = pca.getAllAccounts();
+  const msalAccount = accounts.find((item) => (item.username || '').toLowerCase() === account.email.toLowerCase()) || accounts[0];
+  try {
+    const result = await pca.acquireTokenSilent({ scopes: MICROSOFT_SCOPES, account: msalAccount });
+    account.accessToken = result.accessToken;
+    account.expiresAt = Date.now() + 50 * 60 * 1000;
+    return result.accessToken;
+  } catch (error) {
+    if (!interactive) throw error;
+    const result = await pca.acquireTokenPopup({ scopes: MICROSOFT_SCOPES, account: msalAccount });
+    account.accessToken = result.accessToken;
+    account.expiresAt = Date.now() + 50 * 60 * 1000;
+    return result.accessToken;
+  }
+}
+
+function upsertAccount(next) {
+  const index = state.accounts.findIndex((account) => account.provider === next.provider && account.email === next.email);
+  if (index >= 0) state.accounts[index] = { ...state.accounts[index], ...next };
+  else state.accounts.push(next);
+  saveStore();
+}
+
+async function connectGoogle() {
+  if (!state.googleClientId.trim()) {
+    openSetup('google');
+    return;
+  }
+  try {
+    await initGoogleClient();
+    if (!state.googleTokenClient) {
+      showToast('Google sign-in script did not load. Check your network.');
+      return;
+    }
+    const token = await requestGoogleToken({ prompt: 'consent' });
+    const profile = await Mail.fetchGmailProfile(token);
+    upsertAccount({
+      provider: 'google',
+      accessToken: token,
+      expiresAt: Date.now() + 55 * 60 * 1000,
+      email: profile.email,
+      name: profile.name,
+      givenName: profile.givenName,
+      picture: profile.picture
+    });
+    closeModal();
+    enterApp('live');
+    showToast(`Connected ${profile.email}`);
+    requestNotifications();
+  } catch (error) {
+    console.error(error);
+    if (String(error.message || '').includes('popup')) {
+      showToast('Popup was blocked — allow popups and try again');
+    } else {
+      showToast('Google sign-in did not finish');
+    }
+  }
+}
+
+async function connectMicrosoft() {
+  if (!state.microsoftClientId.trim()) {
+    openSetup('microsoft');
+    return;
+  }
+  try {
+    const pca = await initMsal();
+    if (!pca) {
+      showToast('Microsoft sign-in script did not load. Check your network.');
+      return;
+    }
+    const result = await pca.loginPopup({ scopes: MICROSOFT_SCOPES });
+    const token = result.accessToken;
+    const profile = await Mail.fetchOutlookProfile(token);
+    upsertAccount({
+      provider: 'microsoft',
+      accessToken: token,
+      expiresAt: Date.now() + 50 * 60 * 1000,
+      email: profile.email,
+      name: profile.name,
+      givenName: profile.givenName,
+      picture: ''
+    });
+    closeModal();
+    enterApp('live');
+    showToast(`Connected ${profile.email}`);
+    requestNotifications();
+  } catch (error) {
+    console.error(error);
+    showToast('Microsoft sign-in did not finish');
+  }
+}
+
+function disconnectProvider(provider) {
+  state.accounts = state.accounts.filter((account) => account.provider !== provider);
+  saveStore();
+  if (!state.accounts.length) {
+    state.mode = 'connect';
+    state.messages = [];
+    setConnectVisible(true);
+    updateAccountChrome();
+    showToast('Mailbox disconnected');
+    return;
+  }
+  updateAccountChrome();
+  syncMailbox({ silent: true });
+  showToast('Account disconnected');
+}
+
+function openSetup(provider = 'google') {
+  $$('.setup-pane').forEach((pane) => pane.classList.toggle('active', pane.dataset.provider === provider));
+  $$('.setup-switch').forEach((button) => button.classList.toggle('active', button.dataset.provider === provider));
+  openModal('setupModal');
+}
+
+function copyOrigin(id) {
+  const input = $(id);
+  input.select();
+  navigator.clipboard?.writeText(input.value).then(() => showToast('Origin copied')).catch(() => {
+    document.execCommand('copy');
+    showToast('Origin copied');
+  });
+}
+
+function persistClientIdsFromSettings() {
+  state.googleClientId = $('#googleClientSettings').value.trim();
+  state.microsoftClientId = $('#microsoftClientSettings').value.trim();
+  saveStore();
+  state.googleTokenClient = null;
+  state.msal = null;
+}
+
+async function restoreSession() {
+  const stored = loadStore();
+  state.googleClientId = stored.googleClientId || '';
+  state.microsoftClientId = stored.microsoftClientId || '';
+  state.extraSenders = stored.extraSenders || [];
+  state.prefs = { ...state.prefs, ...(stored.prefs || {}) };
+  state.localFlags = stored.localFlags || {};
+  $('#browserAlertToggle').checked = state.prefs.browserAlert;
+  $('#digestToggle').checked = state.prefs.digest;
+  try {
+    const remote = await fetch('/api/public-config').then((response) => response.json());
+    if (!state.googleClientId && remote.googleClientId) state.googleClientId = remote.googleClientId;
+    if (!state.microsoftClientId && remote.microsoftClientId) state.microsoftClientId = remote.microsoftClientId;
+  } catch {
+    /* static file server is fine */
+  }
+  updateAccountChrome();
+  renderRules();
+
+  if (state.googleClientId) {
+    await initGoogleClient();
+    const hint = (stored.lastEmails || []).find((item) => item.provider === 'google');
+    if (hint && state.googleTokenClient) {
+      try {
+        const token = await requestGoogleToken({ prompt: '', hint: hint.email });
+        const profile = await Mail.fetchGmailProfile(token);
+        upsertAccount({
+          provider: 'google',
+          accessToken: token,
+          expiresAt: Date.now() + 55 * 60 * 1000,
+          email: profile.email,
+          name: profile.name,
+          givenName: profile.givenName,
+          picture: profile.picture
+        });
+      } catch {
+        /* user will reconnect */
+      }
+    }
+  }
+  if (state.microsoftClientId) {
+    try {
+      const pca = await initMsal();
+      const accounts = pca?.getAllAccounts?.() || [];
+      if (accounts.length) {
+        const result = await pca.acquireTokenSilent({ scopes: MICROSOFT_SCOPES, account: accounts[0] });
+        const profile = await Mail.fetchOutlookProfile(result.accessToken);
+        upsertAccount({
+          provider: 'microsoft',
+          accessToken: result.accessToken,
+          expiresAt: Date.now() + 50 * 60 * 1000,
+          email: profile.email,
+          name: profile.name,
+          givenName: profile.givenName,
+          picture: ''
+        });
+      }
+    } catch {
+      /* user will reconnect */
+    }
+  }
+
+  if (state.accounts.length) {
+    enterApp('live');
+  } else {
+    setConnectVisible(true);
+    updateAccountChrome();
+  }
+}
+
+function bindEvents() {
+  $$('.nav-item').forEach((item) => item.addEventListener('click', () => setView(item.dataset.view)));
+  $$('.filter-tab').forEach((tab) => tab.addEventListener('click', () => {
+    state.activeFilter = tab.dataset.filter;
+    state.currentView = 'overview';
+    $$('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.view === 'overview'));
+    $('#breadcrumbCurrent').textContent = 'Overview';
+    $('#inboxTitle').textContent = 'Your watchlist';
+    $('.inbox-heading p').textContent = 'Messages from UNB Fredericton and IRCC.';
+    updateFilterTabs();
+    renderMessages();
+  }));
+  $('#searchInput').addEventListener('input', (event) => {
+    state.query = event.target.value;
+    renderMessages();
+  });
+  $('#messageList').addEventListener('click', (event) => {
+    const starButton = event.target.closest('[data-star-message]');
+    if (starButton) {
+      event.stopPropagation();
+      const message = state.messages.find((item) => item.id === starButton.dataset.starMessage);
+      if (message) {
+        setMessageFlag(message.id, { starred: !message.starred });
+        showToast(message.starred ? 'Message starred' : 'Removed star');
+      }
+      return;
+    }
+    const row = event.target.closest('[data-message]');
+    if (row) showMessage(row.dataset.message);
+  });
+  $('#messageList').addEventListener('keydown', (event) => {
+    if ((event.key === 'Enter' || event.key === ' ') && event.target.closest('[data-message]')) {
+      event.preventDefault();
+      showMessage(event.target.closest('[data-message]').dataset.message);
+    }
+  });
+  $('#markAllRead').addEventListener('click', () => {
+    const unread = state.messages.filter((message) => message.unread);
+    if (!unread.length) {
+      showToast('Everything is already read');
+      return;
+    }
+    unread.forEach((message) => setMessageFlag(message.id, { unread: false }));
+    showToast(`${unread.length} messages marked as read`);
+  });
+  $('#syncButton').addEventListener('click', () => syncMailbox());
+  $('#notificationButton').addEventListener('click', () => {
+    setView('priority');
+    showToast('Showing priority messages');
+  });
+  $('#viewAllButton').addEventListener('click', () => setView('senders'));
+  $('#openSidebar').addEventListener('click', () => {
+    $('#sidebar').classList.add('open');
+    $('#sidebarOverlay').classList.add('open');
+  });
+  $('#closeSidebar').addEventListener('click', closeSidebar);
+  $('#sidebarOverlay').addEventListener('click', closeSidebar);
+  $('#monitorButton').addEventListener('click', openSenderModal);
+  $('#addRuleButton').addEventListener('click', openSenderModal);
+  $('#editRulesButton').addEventListener('click', openSenderModal);
+  $('#changeMailboxButton').addEventListener('click', () => openModal('connectModal'));
+  $('#connectGmail').addEventListener('click', connectGoogle);
+  $('#connectMicrosoft').addEventListener('click', connectMicrosoft);
+  $('#heroGoogle').addEventListener('click', connectGoogle);
+  $('#heroMicrosoft').addEventListener('click', connectMicrosoft);
+  $('#heroDemo').addEventListener('click', enterDemo);
+  $('#openSetupFromHero').addEventListener('click', () => openSetup('google'));
+  $('#openSetupFromConnect').addEventListener('click', () => openSetup('google'));
+  $$('.setup-switch').forEach((button) => button.addEventListener('click', () => openSetup(button.dataset.provider)));
+  $('#copyOrigin').addEventListener('click', () => copyOrigin('#originCopy'));
+  $('#copyOriginMs').addEventListener('click', () => copyOrigin('#originCopyMs'));
+  $('#saveGoogleClient').addEventListener('click', async () => {
+    state.googleClientId = $('#googleClientInput').value.trim();
+    saveStore();
+    state.googleTokenClient = null;
+    closeModal();
+    showToast('Google client ID saved');
+    await connectGoogle();
+  });
+  $('#saveMicrosoftClient').addEventListener('click', async () => {
+    state.microsoftClientId = $('#microsoftClientInput').value.trim();
+    saveStore();
+    state.msal = null;
+    closeModal();
+    showToast('Microsoft client ID saved');
+    await connectMicrosoft();
+  });
+  $('#settingsSaveButton').addEventListener('click', () => {
+    persistClientIdsFromSettings();
+    state.prefs.browserAlert = $('#browserAlertToggle').checked;
+    state.prefs.digest = $('#digestToggle').checked;
+    saveStore();
+    showToast('Preferences saved');
+    requestNotifications();
+  });
+  $('#keywordButton').addEventListener('click', () => {
+    showToast('Priority already flags biometrics, deadlines, and action mail');
+  });
+  $('#openOriginalButton').addEventListener('click', () => {
+    const message = state.messages.find((item) => item.id === state.selectedMessage);
+    if (message?.webLink) window.open(message.webLink, '_blank', 'noopener');
+    else showToast('Original link is available after a live mailbox is connected');
+  });
+  $('#detailStar').addEventListener('click', () => {
+    const message = state.messages.find((item) => item.id === state.selectedMessage);
+    if (message) {
+      setMessageFlag(message.id, { starred: !message.starred });
+      showToast(message.starred ? 'Message starred' : 'Removed star');
+    }
+  });
+  $('#detailReadButton').addEventListener('click', () => {
+    const message = state.messages.find((item) => item.id === state.selectedMessage);
+    if (message) {
+      setMessageFlag(message.id, { unread: !message.unread });
+      showToast(message.unread ? 'Marked as unread' : 'Marked as read');
+    }
+  });
+  $('#senderForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const address = String(formData.get('address') || '').trim().replace(/^@/, '');
+    const name = String(formData.get('name') || '').trim() || address.split('@')[0] || 'New sender';
+    if (!address) return;
+    const exists = effectiveWatchlist().some((rule) => (rule.domains || []).some((domain) => domain.toLowerCase() === address.toLowerCase()) || rule.address?.toLowerCase() === address.toLowerCase());
+    if (exists) {
+      closeModal();
+      showToast('That sender is already on your watchlist');
+      return;
+    }
+    state.extraSenders.push({
+      id: `custom-${Date.now()}`,
+      name,
+      address,
+      initials: initialsFrom(name),
+      kind: 'other'
+    });
+    saveStore();
+    renderRules();
+    closeModal();
+    showToast(`${name} added to your watchlist`);
+    if (state.mode !== 'connect') syncMailbox({ silent: true });
+  });
+  $('#modalBackdrop').addEventListener('click', (event) => {
+    if (event.target === event.currentTarget || event.target.closest('[data-close-modal]')) closeModal();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && $('#modalBackdrop').classList.contains('open')) closeModal();
+  });
+  setInterval(updateSyncStatus, 30000);
+  setInterval(() => {
+    if (state.mode === 'live' && !document.hidden) syncMailbox({ silent: true });
+  }, 5 * 60 * 1000);
+}
+
+bindEvents();
+restoreSession();

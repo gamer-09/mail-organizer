@@ -4,12 +4,57 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#17252f" />
-    <meta name="description" content="A focused inbox for the messages that matter most." />
-    <title>Mailwatch — important mail, sorted</title>
+    <meta name="description" content="A focused inbox for University of New Brunswick (Fredericton) and IRCC mail." />
+    <title>Mailwatch — UNB & IRCC mail</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <section class="connect-screen" id="connectScreen">
+      <div class="connect-brand-panel">
+        <a class="brand" href="#" aria-label="Mailwatch home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4.5 6.75A2.25 2.25 0 0 1 6.75 4.5h10.5a2.25 2.25 0 0 1 2.25 2.25v10.5a2.25 2.25 0 0 1-2.25 2.25H6.75a2.25 2.25 0 0 1-2.25-2.25V6.75Z" stroke="currentColor" stroke-width="1.8"/><path d="m5.1 6.2 5.38 4.38a2.4 2.4 0 0 0 3.04 0L18.9 6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </span>
+          <span>mailwatch</span>
+        </a>
+        <p class="connect-kicker">UNB FREDERICTON · IRCC</p>
+        <h1>Only the mail that can change your next step.</h1>
+        <p class="connect-lede">Link Gmail or Outlook. Mailwatch watches every University of New Brunswick address and official IRCC senders — and leaves the rest of your inbox alone.</p>
+        <div class="watch-chips">
+          <span class="watch-chip school-chip">UNB · unb.ca</span>
+          <span class="watch-chip ircc-chip">IRCC · cic.gc.ca</span>
+        </div>
+        <ul class="connect-points">
+          <li>Read-only access. Mailwatch never sends mail.</li>
+          <li>Matches all UNB Fredericton offices, not one address.</li>
+          <li>Flags biometrics, deadlines, and status updates.</li>
+        </ul>
+      </div>
+      <div class="connect-action-panel">
+        <div class="connect-card">
+          <p class="modal-eyebrow">SECURE CONNECTION</p>
+          <h2>Connect your mailbox</h2>
+          <p class="connect-card-copy">Choose the inbox where UNB and IRCC actually write to you. You can add the other provider later.</p>
+          <button class="provider-button" id="heroGoogle" type="button">
+            <span class="google-g">G</span>
+            <span>Continue with Google</span>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="provider-button" id="heroMicrosoft" type="button">
+            <span class="ms-mark" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+            </span>
+            <span>Continue with Microsoft</span>
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="text-button setup-link" id="openSetupFromHero" type="button">First time? Set up mailbox access</button>
+          <div class="modal-divider"><span>or explore</span></div>
+          <button class="button button-secondary demo-button" id="heroDemo" type="button">Explore with sample UNB &amp; IRCC mail</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="app-shell hidden" id="appShell">
       <aside class="sidebar" id="sidebar" aria-label="Primary navigation">
         <div class="brand-row">
           <a class="brand" href="#" aria-label="Mailwatch home">
@@ -24,12 +69,12 @@
         </div>
 
         <div class="account-card">
-          <div class="account-avatar">JL</div>
+          <div class="account-avatar" data-account-initials>MW</div>
           <div class="account-copy">
-            <span class="eyebrow">Watching inbox</span>
-            <strong>jordan.lee@gmail.com</strong>
+            <span class="eyebrow" id="accountEyebrow">Watching inbox</span>
+            <strong data-account-email>Not connected</strong>
           </div>
-          <span class="online-dot" title="Mailbox connected"></span>
+          <span class="online-dot" id="onlineDot" title="Mailbox status"></span>
         </div>
 
         <div class="nav-group">
@@ -40,12 +85,12 @@
               <span>Overview</span>
             </button>
             <button class="nav-item" data-view="priority">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.75 14.6 9l5.65.82-4.1 4  .97 5.63L12 16.8l-5.12 2.65.98-5.63-4.1-4L9.4 9 12 3.75Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.75 14.6 9l5.65.82-4.1 4 .97 5.63L12 16.8l-5.12 2.65.98-5.63-4.1-4L9.4 9 12 3.75Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
               <span>Priority inbox</span>
-              <span class="nav-count">2</span>
+              <span class="nav-count">0</span>
             </button>
             <button class="nav-item" data-view="senders">
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8.25 19.25H6a2.25 2.25 0 0 1-2.25-2.25v-10A2.25 2.25 0 0 1 6 4.75h12A2.25 2.25 0 0 1 20.25 7v10A2.25 2.25 0 0 1 18 19.25h-2.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 9.25h8M8 12.5h5.25M8 15.75h2.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M12 16.25a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Z" fill="currentColor" stroke="#17252f" stroke-width="1.2" transform="translate(0 -1.25)"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8.25 19.25H6a2.25 2.25 0 0 1-2.25-2.25v-10A2.25 2.25 0 0 1 6 4.75h12A2.25 2.25 0 0 1 20.25 7v10A2.25 2.25 0 0 1 18 19.25h-2.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 9.25h8M8 12.5h5.25M8 15.75h2.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
               <span>Monitored senders</span>
             </button>
           </nav>
@@ -68,9 +113,9 @@
         <div class="sidebar-footer">
           <div class="privacy-note">
             <span class="privacy-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M6.75 10.25h10.5a1.5 1.5 0 0 1 1.5 1.5v6.5a1.5 1.5 0 0 1-1.5 1.5H6.75a1.5 1.5 0 0 1-1.5-1.5v-6.5a1.5 1.5 0 0 1 1.5-1.5ZM8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
-            <span>Only monitored mail is surfaced</span>
+            <span>Only UNB and IRCC mail is surfaced</span>
           </div>
-          <div class="sidebar-version">MAILWATCH <span>v0.1</span></div>
+          <div class="sidebar-version">MAILWATCH <span>v0.2</span></div>
         </div>
       </aside>
 
@@ -85,12 +130,12 @@
             <div class="breadcrumb"><span>Workspace</span><svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><strong id="breadcrumbCurrent">Overview</strong></div>
           </div>
           <div class="topbar-actions">
-            <div class="sync-meta"><span class="status-dot"></span><span id="syncStatus">Synced 4 min ago</span></div>
+            <div class="sync-meta"><span class="status-dot"></span><span id="syncStatus">Not synced yet</span></div>
             <button class="icon-button notification-button" aria-label="Notifications" id="notificationButton">
               <svg viewBox="0 0 24 24" fill="none"><path d="M18.25 10.2a6.25 6.25 0 0 0-12.5 0c0 7.3-2.75 7.3-2.75 8.05h18c0-.75-2.75-.75-2.75-8.05ZM9.75 20.25h4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              <span class="notification-badge">2</span>
+              <span class="notification-badge" id="notificationBadge">0</span>
             </button>
-            <div class="topbar-avatar">JL</div>
+            <div class="topbar-avatar" data-account-initials>MW</div>
           </div>
         </header>
 
@@ -98,36 +143,36 @@
           <section class="view-section active" id="overviewView" aria-label="Mail overview">
             <div class="page-heading">
               <div>
-                <p class="overline">THURSDAY, AUGUST 20, 2026</p>
-                <h1>Good morning, Jordan <span class="wave">✦</span></h1>
-                <p class="heading-copy">Your important mail, sorted into one calm place.</p>
+                <p class="overline" id="todayOverline">THURSDAY, AUGUST 20, 2026</p>
+                <h1><span id="greetingLead">Good morning</span>, <span id="greetingName">there</span> <span class="wave">✦</span></h1>
+                <p class="heading-copy">UNB Fredericton and IRCC, in one calm place.</p>
               </div>
               <div class="heading-actions">
-                <button class="button button-secondary" id="monitorButton"><span class="button-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>Monitor a sender</button>
-                <button class="button button-primary" id="syncButton"><span class="button-icon sync-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20 11a8.1 8.1 0 0 0-14-4.8L4 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4.5V8h3.5M4 13a8.1 8.1 0 0 0 14 4.8l2-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 19.5V16h-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span id="syncButtonText">Sync now</span></button>
+                <button class="button button-secondary" id="monitorButton" type="button"><span class="button-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>Monitor a sender</button>
+                <button class="button button-primary" id="syncButton" type="button"><span class="button-icon sync-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20 11a8.1 8.1 0 0 0-14-4.8L4 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 4.5V8h3.5M4 13a8.1 8.1 0 0 0 14 4.8l2-1.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 19.5V16h-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span id="syncButtonText">Sync now</span></button>
               </div>
             </div>
 
             <div class="stats-grid">
               <article class="stat-card stat-card-dark">
                 <div class="stat-top"><span class="stat-label">Unread</span><span class="stat-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.25h14v10.5H5z" stroke="currentColor" stroke-width="1.7"/><path d="m5.5 7.75 5.1 4.06a2.25 2.25 0 0 0 2.8 0l5.1-4.06" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></div>
-                <div class="stat-value" id="unreadStat">3</div>
-                <div class="stat-foot"><span class="trend up">↑ 1</span> since yesterday</div>
+                <div class="stat-value" id="unreadStat">0</div>
+                <div class="stat-foot" id="unreadFoot"><span class="trend up">↑</span> waiting</div>
               </article>
               <article class="stat-card">
                 <div class="stat-top"><span class="stat-label">Needs attention</span><span class="stat-icon warm"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4.5 20 19H4l8-14.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 9v4.25M12 16.25v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span></div>
-                <div class="stat-value" id="attentionStat">2</div>
+                <div class="stat-value" id="attentionStat">0</div>
                 <div class="stat-foot"><span class="trend warm-text">Action recommended</span></div>
               </article>
               <article class="stat-card">
                 <div class="stat-top"><span class="stat-label">Watched this week</span><span class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none"><path d="M5 18.5V12M10 18.5V8M15 18.5v-4M20 18.5V5.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M4 18.5h17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></div>
-                <div class="stat-value">12</div>
-                <div class="stat-foot"><span class="trend blue-text">2 senders</span> under watch</div>
+                <div class="stat-value" id="weekStat">0</div>
+                <div class="stat-foot"><span class="trend blue-text" id="senderWatchCount">2 senders</span> under watch</div>
               </article>
               <article class="stat-card">
                 <div class="stat-top"><span class="stat-label">Mailbox health</span><span class="stat-icon green"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20.25a8.25 8.25 0 1 0 0-16.5 8.25 8.25 0 0 0 0 16.5Z" stroke="currentColor" stroke-width="1.7"/><path d="m8.5 12.2 2.25 2.25 4.75-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
-                <div class="stat-value health-value">Healthy</div>
-                <div class="stat-foot"><span class="trend green-text">Connected</span> to Gmail</div>
+                <div class="stat-value health-value" id="healthValue">Idle</div>
+                <div class="stat-foot" id="healthFoot"><span class="trend warm-text">Not connected</span></div>
               </article>
             </div>
 
@@ -135,63 +180,100 @@
               <section class="panel inbox-panel" aria-labelledby="inboxTitle">
                 <div class="panel-heading inbox-heading">
                   <div>
-                    <div class="title-with-count"><h2 id="inboxTitle">Your watchlist</h2><span class="count-pill" id="messageCount">6</span></div>
-                    <p>Messages from the people and teams you care about.</p>
+                    <div class="title-with-count"><h2 id="inboxTitle">Your watchlist</h2><span class="count-pill" id="messageCount">0</span></div>
+                    <p>Messages from UNB Fredericton and IRCC.</p>
                   </div>
-                  <button class="text-button" id="markAllRead">Mark all read <svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4.5 4.5L19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                  <button class="text-button" id="markAllRead" type="button">Mark all read <svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4.5 4.5L19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
                 </div>
                 <div class="inbox-toolbar">
                   <div class="filter-tabs" role="tablist" aria-label="Filter messages">
-                    <button class="filter-tab active" data-filter="all" role="tab">All messages</button>
-                    <button class="filter-tab" data-filter="school" role="tab"><span class="mini-dot school-dot"></span>My school</button>
-                    <button class="filter-tab" data-filter="ircc" role="tab"><span class="mini-dot ircc-dot"></span>IRCC</button>
+                    <button class="filter-tab active" data-filter="all" role="tab" type="button">All messages</button>
+                    <button class="filter-tab" data-filter="school" role="tab" type="button"><span class="mini-dot school-dot"></span>UNB</button>
+                    <button class="filter-tab" data-filter="ircc" role="tab" type="button"><span class="mini-dot ircc-dot"></span>IRCC</button>
                   </div>
                   <label class="search-box"><svg viewBox="0 0 24 24" fill="none"><circle cx="10.75" cy="10.75" r="5.75" stroke="currentColor" stroke-width="1.7"/><path d="m15 15 4.25 4.25" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><input id="searchInput" type="search" placeholder="Search watchlist" aria-label="Search watchlist" /></label>
                 </div>
                 <div class="message-list" id="messageList" aria-live="polite"></div>
-                <div class="empty-state hidden" id="emptyState"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.25h14v10.5H5z" stroke="currentColor" stroke-width="1.7"/><path d="m5.5 7.75 5.1 4.06a2.25 2.25 0 0 0 2.8 0l5.1-4.06" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><strong>No messages found</strong><span>Try another search or filter.</span></div>
-                <div class="panel-footer"><span><span class="live-indicator"></span> Watching 2 senders</span><button class="text-button" id="viewAllButton">View all monitored mail <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+                <div class="empty-state hidden" id="emptyState"><div class="empty-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.25h14v10.5H5z" stroke="currentColor" stroke-width="1.7"/><path d="m5.5 7.75 5.1 4.06a2.25 2.25 0 0 0 2.8 0l5.1-4.06" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><strong>No messages found</strong><span id="emptyStateCopy">Try another search or filter.</span></div>
+                <div class="panel-footer"><span><span class="live-indicator"></span> <span id="watchingCount">Watching 2 sender groups</span></span><button class="text-button" id="viewAllButton" type="button">View monitored senders <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
               </section>
 
               <aside class="side-column">
                 <section class="panel attention-panel" aria-labelledby="attentionTitle">
-                  <div class="panel-heading compact-heading"><div><span class="section-kicker"><span class="pulse-dot"></span> FOCUS TODAY</span><h2 id="attentionTitle">Needs your attention</h2></div><span class="attention-total">2</span></div>
-                  <div class="attention-list">
-                    <button class="attention-item" data-message="ircc-1"><span class="attention-icon ircc-mark">IR</span><span class="attention-copy"><strong>IRCC</strong><span>Biometrics instruction letter</span></span><span class="attention-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-                    <button class="attention-item" data-message="school-1"><span class="attention-icon school-mark">HV</span><span class="attention-copy"><strong>Harbourview College</strong><span>Tuition payment deadline</span></span><span class="attention-arrow"><svg viewBox="0 0 24 24" fill="none"><path d="m9 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button>
-                  </div>
+                  <div class="panel-heading compact-heading"><div><span class="section-kicker"><span class="pulse-dot"></span> FOCUS TODAY</span><h2 id="attentionTitle">Needs your attention</h2></div><span class="attention-total">0</span></div>
+                  <div class="attention-list" id="attentionList"></div>
                   <div class="attention-footer"><svg viewBox="0 0 24 24" fill="none"><path d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" stroke="currentColor" stroke-width="1.6"/><path d="M12 7.75v4.5l2.75 1.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Prioritized by sender and keywords</div>
                 </section>
 
                 <section class="panel rules-panel" aria-labelledby="rulesTitle" id="rulesPanel">
-                  <div class="panel-heading compact-heading"><div><span class="section-kicker">MONITORING RULES</span><h2 id="rulesTitle">Who you’re watching</h2></div><button class="icon-button small" id="editRulesButton" aria-label="Edit monitoring rules"><svg viewBox="0 0 24 24" fill="none"><path d="m15.25 5.25 3.5 3.5M5 19l3.6-.8L19.2 7.6a1.9 1.9 0 0 0 0-2.7l-.1-.1a1.9 1.9 0 0 0-2.7 0L5.8 15.4 5 19Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
-                  <div class="rule-list" id="ruleList">
-                    <div class="rule-row"><span class="rule-avatar school-avatar">HV</span><div class="rule-copy"><strong>My school</strong><span>harbourview.edu</span></div><span class="rule-status"></span></div>
-                    <div class="rule-row"><span class="rule-avatar ircc-avatar">IR</span><div class="rule-copy"><strong>IRCC</strong><span>cic.gc.ca</span></div><span class="rule-status"></span></div>
-                  </div>
-                  <button class="add-rule" id="addRuleButton"><span>+</span> Add another sender</button>
+                  <div class="panel-heading compact-heading"><div><span class="section-kicker">MONITORING RULES</span><h2 id="rulesTitle">Who you’re watching</h2></div><button class="icon-button small" id="editRulesButton" aria-label="Edit monitoring rules" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="m15.25 5.25 3.5 3.5M5 19l3.6-.8L19.2 7.6a1.9 1.9 0 0 0 0-2.7l-.1-.1a1.9 1.9 0 0 0-2.7 0L5.8 15.4 5 19Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+                  <div class="rule-list" id="ruleList"></div>
+                  <button class="add-rule" id="addRuleButton" type="button"><span>+</span> Add another sender</button>
                 </section>
 
                 <section class="tip-card">
                   <div class="tip-orb"><svg viewBox="0 0 24 24" fill="none"><path d="M9.25 18.5h5.5M9.75 21h4.5M8.1 15.9c-.95-.85-1.6-2.12-1.6-3.65a5.5 5.5 0 1 1 11 0c0 1.53-.65 2.8-1.6 3.65-.65.58-1.15 1.3-1.15 2.1h-5.5c0-.8-.5-1.52-1.15-2.1Z" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 3V1.75M4.65 5.15 3.8 4.3M19.35 5.15l.85-.85" stroke="currentColor" stroke-width="1.55" stroke-linecap="round"/></svg></div>
-                  <div><strong>Make it yours</strong><p>Set a keyword to flag urgent messages automatically.</p><button class="link-button" id="keywordButton">Add a keyword <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+                  <div><strong>Make it yours</strong><p>UNB and IRCC are already on the watchlist. Add any extra address you never want to miss.</p><button class="link-button" id="keywordButton" type="button">How priority works <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
                 </section>
               </aside>
             </div>
           </section>
 
           <section class="view-section" id="settingsView" aria-label="Settings">
-            <div class="page-heading simple-heading"><div><p class="overline">MAILBOX SETUP</p><h1>Settings</h1><p class="heading-copy">Control which inbox Mailwatch watches and how it keeps you informed.</p></div><button class="button button-primary" id="settingsSaveButton">Save changes</button></div>
+            <div class="page-heading simple-heading"><div><p class="overline">MAILBOX SETUP</p><h1>Settings</h1><p class="heading-copy">Control which inbox Mailwatch watches and how it keeps you informed.</p></div><button class="button button-primary" id="settingsSaveButton" type="button">Save changes</button></div>
             <div class="settings-layout">
-              <section class="panel settings-card"><div class="settings-card-header"><div class="settings-symbol green-symbol"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.25h14v10.5H5z" stroke="currentColor" stroke-width="1.7"/><path d="m5.5 7.75 5.1 4.06a2.25 2.25 0 0 0 2.8 0l5.1-4.06" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div><div><h2>Connected mailbox</h2><p>Mailwatch checks this account for new messages.</p></div><span class="connected-badge"><span></span> Connected</span></div><div class="connected-account"><span class="large-account-avatar">JL</span><div><strong>jordan.lee@gmail.com</strong><span>Gmail · Last checked 4 minutes ago</span></div><button class="button button-quiet" id="changeMailboxButton">Change account</button></div></section>
-              <section class="panel settings-card"><div class="settings-card-header"><div class="settings-symbol purple-symbol"><svg viewBox="0 0 24 24" fill="none"><path d="M12 15.25a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Z" stroke="currentColor" stroke-width="1.7"/><path d="m19.12 13.19 1.06.83-1.4 2.42-1.27-.44a7.8 7.8 0 0 1-1.55.9l-.2 1.34h-2.8l-.2-1.34a7.8 7.8 0 0 1-1.55-.9l-1.27.44-1.4-2.42 1.06-.83a7.8 7.8 0 0 1 0-1.78l-1.06-.83 1.4-2.42 1.27.44a7.8 7.8 0 0 1 1.55-.9l.2-1.34h2.8l.2 1.34a7.8 7.8 0 0 1 1.55.9l1.27-.44 1.4 2.42-1.06.83a7.8 7.8 0 0 1 0 1.78Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div><div><h2>Alert preferences</h2><p>Choose how Mailwatch gets your attention.</p></div></div><div class="preference-row"><div><strong>New monitored mail</strong><span>Show a browser notification when a watched sender emails you.</span></div><label class="switch"><input type="checkbox" checked id="browserAlertToggle" /><span class="slider"></span></label></div><div class="preference-row"><div><strong>Daily digest</strong><span>A quiet summary of unread school and IRCC mail.</span></div><label class="switch"><input type="checkbox" id="digestToggle" /><span class="slider"></span></label></div></section>
-              <section class="panel settings-card"><div class="settings-card-header"><div class="settings-symbol orange-symbol"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4.5 20 19H4l8-14.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 9v4.25M12 16.25v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div><div><h2>Privacy & access</h2><p>Your inbox stays yours.</p></div></div><div class="privacy-list"><div><span class="check-circle"><svg viewBox="0 0 24 24" fill="none"><path d="m7.5 12.25 3 3 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Only messages matching your watchlist are indexed.</span></div><div><span class="check-circle"><svg viewBox="0 0 24 24" fill="none"><path d="m7.5 12.25 3 3 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Mailwatch never sends mail on your behalf.</span></div><div><span class="check-circle"><svg viewBox="0 0 24 24" fill="none"><path d="m7.5 12.25 3 3 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>You can disconnect this account at any time.</span></div></div></section>
+              <section class="panel settings-card">
+                <div class="settings-card-header">
+                  <div class="settings-symbol green-symbol"><svg viewBox="0 0 24 24" fill="none"><path d="M5 7.25h14v10.5H5z" stroke="currentColor" stroke-width="1.7"/><path d="m5.5 7.75 5.1 4.06a2.25 2.25 0 0 0 2.8 0l5.1-4.06" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
+                  <div><h2>Connected mailbox</h2><p>Mailwatch checks this account for UNB and IRCC messages.</p></div>
+                  <span class="connected-badge" id="connectedBadge"><span></span> Off</span>
+                </div>
+                <div id="connectedAccounts"></div>
+                <div class="settings-inline-actions">
+                  <button class="button button-quiet" id="changeMailboxButton" type="button">Add or change account</button>
+                </div>
+              </section>
+              <section class="panel settings-card">
+                <div class="settings-card-header">
+                  <div class="settings-symbol purple-symbol"><svg viewBox="0 0 24 24" fill="none"><path d="M12 15.25a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Z" stroke="currentColor" stroke-width="1.7"/><path d="m19.12 13.19 1.06.83-1.4 2.42-1.27-.44a7.8 7.8 0 0 1-1.55.9l-.2 1.34h-2.8l-.2-1.34a7.8 7.8 0 0 1-1.55-.9l-1.27.44-1.4-2.42 1.06-.83a7.8 7.8 0 0 1 0-1.78l-1.06-.83 1.4-2.42 1.27.44a7.8 7.8 0 0 1 1.55-.9l.2-1.34h2.8l.2 1.34a7.8 7.8 0 0 1 1.55.9l1.27-.44 1.4 2.42-1.06.83a7.8 7.8 0 0 1 0 1.78Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></div>
+                  <div><h2>OAuth client IDs</h2><p>Public client IDs only — never paste a client secret here.</p></div>
+                </div>
+                <div class="settings-fields">
+                  <label class="form-label" for="googleClientSettings">Google client ID</label>
+                  <input class="form-input" id="googleClientSettings" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off" />
+                  <label class="form-label" for="microsoftClientSettings">Microsoft application (client) ID</label>
+                  <input class="form-input" id="microsoftClientSettings" placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off" />
+                </div>
+              </section>
+              <section class="panel settings-card">
+                <div class="settings-card-header">
+                  <div class="settings-symbol purple-symbol"><svg viewBox="0 0 24 24" fill="none"><path d="M12 15.25a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Z" stroke="currentColor" stroke-width="1.7"/></svg></div>
+                  <div><h2>Alert preferences</h2><p>Choose how Mailwatch gets your attention.</p></div>
+                </div>
+                <div class="preference-row"><div><strong>New monitored mail</strong><span>Show a browser notification when UNB or IRCC emails you.</span></div><label class="switch"><input type="checkbox" checked id="browserAlertToggle" /><span class="slider"></span></label></div>
+                <div class="preference-row"><div><strong>Daily digest</strong><span>A quiet summary of unread school and IRCC mail.</span></div><label class="switch"><input type="checkbox" id="digestToggle" /><span class="slider"></span></label></div>
+              </section>
+              <section class="panel settings-card">
+                <div class="settings-card-header">
+                  <div class="settings-symbol orange-symbol"><svg viewBox="0 0 24 24" fill="none"><path d="M12 4.5 20 19H4l8-14.5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 9v4.25M12 16.25v.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+                  <div><h2>Privacy &amp; access</h2><p>Your inbox stays yours.</p></div>
+                </div>
+                <div class="privacy-list">
+                  <div><span class="check-circle"><svg viewBox="0 0 24 24" fill="none"><path d="m7.5 12.25 3 3 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Only messages matching UNB, IRCC, or senders you add are shown.</span></div>
+                  <div><span class="check-circle"><svg viewBox="0 0 24 24" fill="none"><path d="m7.5 12.25 3 3 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Mailwatch never sends mail on your behalf.</span></div>
+                  <div><span class="check-circle"><svg viewBox="0 0 24 24" fill="none"><path d="m7.5 12.25 3 3 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>You can disconnect this account at any time.</span></div>
+                </div>
+              </section>
             </div>
           </section>
 
           <section class="view-section" id="helpView" aria-label="How Mailwatch works">
-            <div class="page-heading simple-heading"><div><p class="overline">A QUICK TOUR</p><h1>How it works</h1><p class="heading-copy">Mailwatch keeps your attention on the messages that can change your next step.</p></div></div>
-            <div class="help-grid"><div class="help-hero panel"><span class="help-number">01</span><div class="help-illustration"><svg viewBox="0 0 120 90" fill="none"><rect x="16" y="18" width="68" height="48" rx="7" stroke="currentColor" stroke-width="2"/><path d="m18 22 28 22a7 7 0 0 0 8.6 0L82 22" stroke="currentColor" stroke-width="2"/><circle cx="89" cy="61" r="16" fill="currentColor"/><path d="m82.5 61 4.2 4.2 8.4-9" stroke="#f6f3ed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h2>Connect once</h2><p>Link your Gmail account securely. Mailwatch only looks for the senders you choose.</p></div><div class="help-hero panel"><span class="help-number">02</span><div class="help-illustration"><svg viewBox="0 0 120 90" fill="none"><path d="M20 65h80" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="24" y="22" width="52" height="33" rx="5" stroke="currentColor" stroke-width="2"/><path d="M32 32h25M32 40h35M32 48h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M91 27v24M85 45l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h2>Choose your watchlist</h2><p>Add a school address, a government department, or any sender you never want to miss.</p></div><div class="help-hero panel"><span class="help-number">03</span><div class="help-illustration"><svg viewBox="0 0 120 90" fill="none"><rect x="18" y="17" width="84" height="56" rx="8" stroke="currentColor" stroke-width="2"/><path d="M32 34h42M32 45h28M32 56h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="88" cy="54" r="10" fill="currentColor"/><path d="m83.5 54 3 3 6-6" stroke="#f6f3ed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h2>See what matters</h2><p>Messages are grouped, prioritized, and ready when you are — without the inbox noise.</p></div></div>
+            <div class="page-heading simple-heading"><div><p class="overline">A QUICK TOUR</p><h1>How it works</h1><p class="heading-copy">Mailwatch keeps your attention on UNB Fredericton and IRCC — the messages that can change your next step.</p></div></div>
+            <div class="help-grid">
+              <div class="help-hero panel"><span class="help-number">01</span><div class="help-illustration"><svg viewBox="0 0 120 90" fill="none"><rect x="16" y="18" width="68" height="48" rx="7" stroke="currentColor" stroke-width="2"/><path d="m18 22 28 22a7 7 0 0 0 8.6 0L82 22" stroke="currentColor" stroke-width="2"/><circle cx="89" cy="61" r="16" fill="currentColor"/><path d="m82.5 61 4.2 4.2 8.4-9" stroke="#f6f3ed" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h2>Connect once</h2><p>Link Gmail or Outlook with read-only access. Mailwatch only looks for the senders on your watchlist.</p></div>
+              <div class="help-hero panel"><span class="help-number">02</span><div class="help-illustration"><svg viewBox="0 0 120 90" fill="none"><path d="M20 65h80" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="24" y="22" width="52" height="33" rx="5" stroke="currentColor" stroke-width="2"/><path d="M32 32h25M32 40h35M32 48h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M91 27v24M85 45l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h2>Watch the whole school</h2><p>UNB Fredericton is matched by domain — registrar, ISAO, student accounts, admissions, and anyone else @unb.ca.</p></div>
+              <div class="help-hero panel"><span class="help-number">03</span><div class="help-illustration"><svg viewBox="0 0 120 90" fill="none"><rect x="18" y="17" width="84" height="56" rx="8" stroke="currentColor" stroke-width="2"/><path d="M32 34h42M32 45h28M32 56h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="88" cy="54" r="10" fill="currentColor"/><path d="m83.5 54 3 3 6-6" stroke="#f6f3ed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h2>See what matters</h2><p>IRCC notices, biometrics letters, and tuition deadlines are grouped and flagged without the rest of the inbox noise.</p></div>
+            </div>
           </section>
         </div>
       </main>
@@ -199,26 +281,114 @@
 
     <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true">
       <section class="modal" id="connectModal" role="dialog" aria-modal="true" aria-labelledby="connectTitle">
-        <button class="modal-close" data-close-modal aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+        <button class="modal-close" data-close-modal aria-label="Close dialog" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
         <div class="modal-icon gmail-modal-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4.75 18.5v-11A2.25 2.25 0 0 1 7 5.25h10a2.25 2.25 0 0 1 2.25 2.25v11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m5 7 6.1 4.86a1.4 1.4 0 0 0 1.8 0L19 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M8 18.5h8" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
-        <p class="modal-eyebrow">SECURE CONNECTION</p><h2 id="connectTitle">Connect your mailbox</h2><p class="modal-copy">Mailwatch will look for messages from your chosen senders and keep everything else out of the way.</p>
-        <button class="provider-button" id="connectGmail"><span class="google-g">G</span><span>Continue with Google</span><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <div class="modal-divider"><span>read-only access</span></div><div class="modal-trust"><span><svg viewBox="0 0 24 24" fill="none"><path d="M6.75 10.25h10.5a1.5 1.5 0 0 1 1.5 1.5v6.5a1.5 1.5 0 0 1-1.5 1.5H6.75a1.5 1.5 0 0 1-1.5-1.5v-6.5a1.5 1.5 0 0 1 1.5-1.5ZM8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Your password is never shared</span><span><svg viewBox="0 0 24 24" fill="none"><path d="M12 20a8.25 8.25 0 1 0 0-16.5A8.25 8.25 0 0 0 12 20Z" stroke="currentColor" stroke-width="1.6"/><path d="m8.5 12.25 2.25 2.25 4.75-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg> Disconnect whenever you want</span></div>
+        <p class="modal-eyebrow">SECURE CONNECTION</p>
+        <h2 id="connectTitle">Connect your mailbox</h2>
+        <p class="modal-copy">Mailwatch will look for messages from UNB and IRCC and keep everything else out of the way.</p>
+        <button class="provider-button" id="connectGmail" type="button"><span class="google-g">G</span><span>Continue with Google</span><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="provider-button" id="connectMicrosoft" type="button"><span class="ms-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span><span>Continue with Microsoft</span><svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="text-button setup-link" id="openSetupFromConnect" type="button">Need to create a client ID first?</button>
+        <div class="modal-divider"><span>read-only access</span></div>
+        <div class="modal-trust"><span><svg viewBox="0 0 24 24" fill="none"><path d="M6.75 10.25h10.5a1.5 1.5 0 0 1 1.5 1.5v6.5a1.5 1.5 0 0 1-1.5 1.5H6.75a1.5 1.5 0 0 1-1.5-1.5v-6.5a1.5 1.5 0 0 1 1.5-1.5ZM8.25 10.25V7.5a3.75 3.75 0 0 1 7.5 0v2.75" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg> Your password is never shared</span><span><svg viewBox="0 0 24 24" fill="none"><path d="M12 20a8.25 8.25 0 1 0 0-16.5A8.25 8.25 0 0 0 12 20Z" stroke="currentColor" stroke-width="1.6"/><path d="m8.5 12.25 2.25 2.25 4.75-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg> Disconnect whenever you want</span></div>
+      </section>
+
+      <section class="modal setup-modal" id="setupModal" role="dialog" aria-modal="true" aria-labelledby="setupTitle">
+        <button class="modal-close" data-close-modal aria-label="Close dialog" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+        <p class="modal-eyebrow">ONE-TIME SETUP</p>
+        <h2 id="setupTitle">Create mailbox access</h2>
+        <p class="modal-copy">Paste a public client ID. Mailwatch talks to Google or Microsoft from your browser — there is no client secret to store.</p>
+        <div class="setup-switch-row">
+          <button class="setup-switch active" data-provider="google" type="button">Google</button>
+          <button class="setup-switch" data-provider="microsoft" type="button">Microsoft</button>
+        </div>
+        <div class="setup-pane active" data-provider="google">
+          <ol class="setup-steps">
+            <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud credentials</a> and create a project.</li>
+            <li>Enable the <strong>Gmail API</strong>.</li>
+            <li>Configure the OAuth consent screen (External is fine). Add yourself as a test user.</li>
+            <li>Create an OAuth client ID of type <strong>Web application</strong>.</li>
+            <li>Under Authorized JavaScript origins, add this origin:</li>
+          </ol>
+          <div class="origin-row">
+            <input class="form-input" id="originCopy" readonly />
+            <button class="button button-secondary" id="copyOrigin" type="button">Copy</button>
+          </div>
+          <label class="form-label" for="googleClientInput">Google client ID</label>
+          <input class="form-input" id="googleClientInput" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off" />
+          <div class="modal-actions">
+            <button type="button" class="button button-secondary" data-close-modal>Cancel</button>
+            <button type="button" class="button button-primary" id="saveGoogleClient">Save and connect</button>
+          </div>
+        </div>
+        <div class="setup-pane" data-provider="microsoft">
+          <ol class="setup-steps">
+            <li>Open <a href="https://portal.azure.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" rel="noopener">Azure app registrations</a>.</li>
+            <li>New registration. Accounts in any org directory <em>and</em> personal Microsoft accounts.</li>
+            <li>Platform: <strong>Single-page application</strong>. Redirect URI:</li>
+          </ol>
+          <div class="origin-row">
+            <input class="form-input" id="originCopyMs" readonly />
+            <button class="button button-secondary" id="copyOriginMs" type="button">Copy</button>
+          </div>
+          <ol class="setup-steps continue-steps">
+            <li>API permissions: <strong>Mail.Read</strong> and <strong>User.Read</strong> (delegated).</li>
+            <li>Copy the Application (client) ID.</li>
+          </ol>
+          <label class="form-label" for="microsoftClientInput">Microsoft client ID</label>
+          <input class="form-input" id="microsoftClientInput" placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off" />
+          <div class="modal-actions">
+            <button type="button" class="button button-secondary" data-close-modal>Cancel</button>
+            <button type="button" class="button button-primary" id="saveMicrosoftClient">Save and connect</button>
+          </div>
+        </div>
       </section>
 
       <section class="modal sender-modal" id="senderModal" role="dialog" aria-modal="true" aria-labelledby="senderTitle">
-        <button class="modal-close" data-close-modal aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+        <button class="modal-close" data-close-modal aria-label="Close dialog" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
         <div class="modal-icon sender-modal-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4.75 7.25h14v10.5h-14z" stroke="currentColor" stroke-width="1.7"/><path d="m5.25 7.75 5.1 4.06a2.25 2.25 0 0 0 2.8 0l5.1-4.06" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></div>
-        <p class="modal-eyebrow">WATCHLIST</p><h2 id="senderTitle">Monitor a sender</h2><p class="modal-copy">Add an email address or domain. Mailwatch will surface matching messages in your watchlist.</p>
-        <form id="senderForm"><label class="form-label" for="senderName">Name <span>optional</span></label><input class="form-input" id="senderName" name="name" placeholder="e.g. My school" autocomplete="off" /><label class="form-label" for="senderAddress">Email or domain</label><input class="form-input" id="senderAddress" name="address" placeholder="e.g. registrar@school.ca" autocomplete="off" required /><div class="form-hint"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.25" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.5v5M12 7.65v.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg> You can change this later in Settings.</div><div class="modal-actions"><button type="button" class="button button-secondary" data-close-modal>Cancel</button><button type="submit" class="button button-primary">Add to watchlist</button></div></form>
+        <p class="modal-eyebrow">WATCHLIST</p>
+        <h2 id="senderTitle">Monitor a sender</h2>
+        <p class="modal-copy">UNB and IRCC are already watched. Add another email or domain if you need it.</p>
+        <form id="senderForm">
+          <label class="form-label" for="senderName">Name <span>optional</span></label>
+          <input class="form-input" id="senderName" name="name" placeholder="e.g. Scholarship office" autocomplete="off" />
+          <label class="form-label" for="senderAddress">Email or domain</label>
+          <input class="form-input" id="senderAddress" name="address" placeholder="e.g. awards@unb.ca" autocomplete="off" required />
+          <div class="form-hint"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.25" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.5v5M12 7.65v.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg> You can change this later in Settings.</div>
+          <div class="modal-actions">
+            <button type="button" class="button button-secondary" data-close-modal>Cancel</button>
+            <button type="submit" class="button button-primary">Add to watchlist</button>
+          </div>
+        </form>
       </section>
 
       <section class="modal message-modal" id="messageModal" role="dialog" aria-modal="true" aria-labelledby="messageModalTitle">
-        <button class="modal-close" data-close-modal aria-label="Close dialog"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
-        <div class="message-detail-top"><span class="detail-avatar" id="detailAvatar">IR</span><div><p class="modal-eyebrow" id="detailCategory">IRCC</p><span class="detail-date" id="detailDate">Today at 9:18 AM</span></div><button class="star-button detail-star" id="detailStar" aria-label="Star message"><svg viewBox="0 0 24 24" fill="none"><path d="m12 4.25 2.36 4.78 5.28.77-3.82 3.72.9 5.26L12 16.3l-4.72 2.48.9-5.26-3.82-3.72 5.28-.77L12 4.25Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg></button></div><h2 id="messageModalTitle">Biometrics instruction letter available</h2><div class="detail-sender" id="detailSender">Immigration, Refugees and Citizenship Canada &lt;no-reply@cic.gc.ca&gt;</div><div class="detail-body" id="detailBody"></div><div class="detail-actions"><button class="button button-primary" id="openOriginalButton">Open in Gmail <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="button button-secondary" id="detailReadButton">Mark as read</button></div></section>
+        <button class="modal-close" data-close-modal aria-label="Close dialog" type="button"><svg viewBox="0 0 24 24" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+        <div class="message-detail-top">
+          <span class="detail-avatar" id="detailAvatar">IR</span>
+          <div>
+            <p class="modal-eyebrow" id="detailCategory">IRCC</p>
+            <span class="detail-date" id="detailDate"></span>
+          </div>
+          <button class="star-button detail-star" id="detailStar" aria-label="Star message" type="button">
+            <svg viewBox="0 0 24 24" fill="none"><path d="m12 4.25 2.36 4.78 5.28.77-3.82 3.72.9 5.26L12 16.3l-4.72 2.48.9-5.26-3.82-3.72 5.28-.77L12 4.25Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <h2 id="messageModalTitle"></h2>
+        <div class="detail-sender" id="detailSender"></div>
+        <div class="detail-body" id="detailBody"></div>
+        <div class="detail-actions">
+          <button class="button button-primary" id="openOriginalButton" type="button"><span>Open original</span> <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h13M13 6l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <button class="button button-secondary" id="detailReadButton" type="button">Mark as read</button>
+        </div>
+      </section>
     </div>
 
     <div class="toast" id="toast" role="status"><span class="toast-icon"><svg viewBox="0 0 24 24" fill="none"><path d="m7.5 12.25 3 3 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span id="toastMessage">Saved</span></div>
+    <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="mail.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
