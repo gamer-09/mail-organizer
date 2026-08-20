@@ -193,8 +193,11 @@ function updateAccountChrome() {
   $('#greetingLead').textContent = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   $('#greetingName').textContent = greetingName();
   $('#todayOverline').textContent = weekdayHeadline();
-  $('#originCopy').value = currentOrigin();
-  $('#originCopyMs').value = currentOrigin();
+  const origin = currentOrigin();
+  ['#originCopy', '#originCopyMs', '#heroOriginCopy'].forEach((selector) => {
+    const input = $(selector);
+    if (input) input.value = origin;
+  });
   $('#googleClientInput').value = state.googleClientId;
   $('#microsoftClientInput').value = state.microsoftClientId;
   $('#googleClientSettings').value = state.googleClientId;
@@ -651,8 +654,12 @@ async function connectGoogle() {
     requestNotifications();
   } catch (error) {
     console.error(error);
-    if (String(error.message || '').includes('popup')) {
-      showToast('Popup was blocked — allow popups and try again');
+    const text = String(error.message || error.error || '');
+    if (googleErrorLooksLikeOrigin(error)) {
+      openSetup('google', { originError: true });
+      showToast('Add this site origin in Google Cloud, then try again');
+    } else if (/popup/i.test(text)) {
+      showToast('Sign-in closed. If Google said “no registered origin”, add the origin shown on this page.');
     } else {
       showToast('Google sign-in did not finish');
     }
@@ -708,9 +715,17 @@ function disconnectProvider(provider) {
   showToast('Account disconnected');
 }
 
-function openSetup(provider = 'google') {
+function googleErrorLooksLikeOrigin(error) {
+  const text = `${error?.message || ''} ${error?.error || ''} ${error?.details || ''}`.toLowerCase();
+  return /origin|invalid_client|unauthorized_client|access_denied/.test(text);
+}
+
+function openSetup(provider = 'google', { originError = false } = {}) {
   $$('.setup-pane').forEach((pane) => pane.classList.toggle('active', pane.dataset.provider === provider));
   $$('.setup-switch').forEach((button) => button.classList.toggle('active', button.dataset.provider === provider));
+  const banner = $('#originError');
+  if (banner) banner.classList.toggle('hidden', !(originError && provider === 'google'));
+  updateAccountChrome();
   openModal('setupModal');
 }
 

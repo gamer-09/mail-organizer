@@ -588,6 +588,32 @@ svg { display: block; width: 20px; height: 20px; }
 .settings-inline-actions { padding: 0 24px 20px; }
 .settings-fields { padding: 0 24px 22px; }
 .settings-fields .form-label { margin-top: 4px; }
+.origin-callout {
+  margin: 0 0 18px;
+  padding: 12px 12px 11px;
+  background: #f7f8f6;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.origin-callout > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #7d8d8f;
+  font-family: 'DM Mono', monospace;
+  font-size: 8px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.compact-origin { margin: 0; }
+.origin-error {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  color: #ae6645;
+  background: var(--coral-pale);
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.45;
+}
 .origin-row { display: flex; gap: 8px; margin: 4px 0 8px; }
 .origin-row .form-input { font-family: 'DM Mono', monospace; font-size: 10px; }
 .origin-row .button { flex: 0 0 auto; }

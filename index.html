@@ -35,6 +35,13 @@
           <p class="modal-eyebrow">SECURE CONNECTION</p>
           <h2>Connect your mailbox</h2>
           <p class="connect-card-copy">Choose the inbox where UNB and IRCC actually write to you. You can add the other provider later.</p>
+          <div class="origin-callout">
+            <span>Google must allow this origin</span>
+            <div class="origin-row compact-origin">
+              <input class="form-input" id="heroOriginCopy" readonly aria-label="Current site origin" />
+              <button class="button button-secondary" id="copyHeroOrigin" type="button">Copy</button>
+            </div>
+          </div>
           <button class="provider-button" id="heroGoogle" type="button">
             <span class="google-g">G</span>
             <span>Continue with Google</span>
@@ -307,9 +314,10 @@
             <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud credentials</a> and create a project.</li>
             <li>Enable the <strong>Gmail API</strong>.</li>
             <li>Configure the OAuth consent screen (External is fine). Add yourself as a test user.</li>
-            <li>Create an OAuth client ID of type <strong>Web application</strong>.</li>
-            <li>Under Authorized JavaScript origins, add this origin:</li>
+            <li>Create an OAuth client ID of type <strong>Web application</strong> — not Desktop or iOS.</li>
+            <li>Under <strong>Authorized JavaScript origins</strong>, add this exact origin (no trailing slash):</li>
           </ol>
+          <div class="origin-error hidden" id="originError">Google said <strong>no registered origin</strong>. Add the URL below, click Save, wait a minute, then try again.</div>
           <div class="origin-row">
             <input class="form-input" id="originCopy" readonly />
             <button class="button button-secondary" id="copyOrigin" type="button">Copy</button>
